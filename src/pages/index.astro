@@ -138,7 +138,7 @@ const rowCards = contentCards;
     </section>
 
     <footer class="home-footer">
-      <a class="more-about-link" href="#">About <span aria-hidden="true">→</span></a>
+      <a class="more-about-link" href="#">More about me <span aria-hidden="true">→</span></a>
       <a class="contact-link" href="#">Get in touch</a>
     </footer>
 
@@ -226,7 +226,18 @@ const rowCards = contentCards;
           <span class="chapter-panel__hint">Drag the cards</span>
         </nav>
       </aside>
-      <button type="button" class="chapter-return" data-return-top>Back to badge ↑</button>
+      {/* Screen 2 action bar: "More about me" bottom-left, "Get in touch" plus a
+          round back-to-top button bottom-right. The bar is space-between with a
+          fixed gap, so the button can never collide with the pill. */}
+      <div class="chapter-actions">
+        <a class="more-about-link" href="#">More about me <span aria-hidden="true">→</span></a>
+        <div class="chapter-actions__end">
+          <a class="contact-link" href="#">Get in touch</a>
+          <button type="button" class="to-top" data-return-top aria-label="Back to top">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M6 14.5 12 8.5l6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
+        </div>
+      </div>
     </section>
 
     <div class="morph-debug" data-morph-debug hidden aria-live="off"></div>

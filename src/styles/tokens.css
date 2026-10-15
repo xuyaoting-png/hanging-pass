@@ -307,7 +307,7 @@ button { font: inherit; }
   width: max-content;
   margin: 0;
   /* After switching to "left stage + right panel" the watermark shrank to the stage (about 62vw),
-     behind the cards; 1333px can no longer fit the 911px stage, so it would press the panel. */
+     behind the cards; the 1333px type can no longer fit the 911px stage, pressing the panel. */
   transform: translateY(-50%);
   color: #e8ebe5;
   font-size: clamp(88px, 12vw, 176px);
@@ -372,11 +372,11 @@ button { font: inherit; }
 
 /* Full-bleed cover image: it fills the card face and the text floats on top.
    Note: .card-face is already position:absolute + inset:0, a positioning context by nature.
-   Never put position:relative on --front: it beats absolute and collapses to content height. */
+   Never put position:relative on --front — it beats absolute and collapses to content height. */
 .card-face__bg { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; }
 /* A very faint paper tint top and bottom → the kicker and signature stay legible on the image */
 .card-face__scrim { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, color-mix(in srgb, #f7f9f5 78%, transparent) 0%, color-mix(in srgb, #f7f9f5 24%, transparent) 22%, transparent 42%, transparent 62%, color-mix(in srgb, #f7f9f5 72%, transparent) 100%); }
-/* Front keeps only the title: one line (nowrap), size tracks card width (cqw) → 6 cards match.
+/* Front keeps only the title: one line (nowrap), size tracks card width (cqw), so 6 cards match.
    8cqw is back-solved from the longest "Engineering Plastics." (21 characters), just one line. */
 .card-face--front > h3 {
   position: relative;
@@ -452,7 +452,16 @@ button { font: inherit; }
 .chapter-controls__dots { display: flex; align-items: center; gap: 8px; margin-inline: 4px; flex-shrink: 0; }
 .chapter-controls__dots button { width: 8px; height: 8px; padding: 0; border: 0; background: color-mix(in srgb, var(--home-ink) 22%, transparent); }
 .chapter-controls__dots button[aria-current='true'] { background: var(--home-ink); }
-.chapter-return { position: fixed; z-index: 9; right: max(42px, calc((100vw - var(--max-width)) / 2)); bottom: 28px; padding: 7px 0; border: 0; background: transparent; color: var(--home-muted); cursor: pointer; opacity: var(--morph-panel); }
+/* Screen 2 action bar. pointer-events is enabled only on the two ends so the
+   middle of the bar never blocks dragging the cards. */
+.chapter-actions { position: fixed; z-index: 9; right: max(42px, calc((100vw - var(--max-width)) / 2)); bottom: 28px; left: max(24px, calc((100vw - var(--max-width)) / 2)); display: flex; align-items: center; justify-content: space-between; gap: 20px; opacity: var(--morph-panel); pointer-events: none; }
+.chapter-actions a, .chapter-actions button { pointer-events: auto; }
+.chapter-actions__end { display: flex; align-items: center; gap: 14px; }
+.chapter-actions .contact-link { border-color: #cbd2ca; background: #ffffffcc; }
+/* Round back-to-top button: same row as "Get in touch"; the flex gap keeps them apart. */
+.to-top { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: #fff; color: var(--home-ink); box-shadow: 0 6px 18px #26312b1f; cursor: pointer; transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
+.to-top:hover { transform: translateY(-2px); border-color: var(--text-muted); box-shadow: 0 10px 24px #26312b2b; }
+.to-top:active { transform: translateY(0); }
 .morph-debug { position: fixed; z-index: 20; top: 12px; right: 12px; max-width: 280px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--home-paper); color: var(--home-ink); font-family: var(--font-mono); font-size: 10px; line-height: 1.5; white-space: pre; pointer-events: none; }
 .morph-debug[hidden] { display: none; }
 .home-footer {
@@ -505,7 +514,10 @@ button { font: inherit; }
   .chapter-controls__dots { gap: 4px; margin-inline: 0; }
   .chapter-controls__dots button { width: 6px; height: 6px; }
   .chapter-controls button { width: 28px; height: 28px; }
-  .chapter-return { right: 24px; }
+  .chapter-actions { right: 20px; bottom: 20px; left: 20px; gap: 12px; }
+  .chapter-actions .more-about-link { font-size: 12px; }
+  .chapter-actions .contact-link { padding: 6px 12px; font-size: 12px; }
+  .to-top { width: 38px; height: 38px; }
 }
 @media (min-width: 761px) and (max-width: 1100px) {
   .chapter-grid { width: min(100%, 680px); grid-template-columns: repeat(2, minmax(0, 1fr)); }
