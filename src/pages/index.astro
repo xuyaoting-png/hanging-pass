@@ -1,0 +1,242 @@
+---
+import Base from '../layouts/Base.astro';
+import { DEMO_CARDS as CARDS } from '../data/cards.demo';
+
+// 卡片目录：改 src/data/cards.demo.ts 换成你自己的内容即可。
+// 第二屏的卡片本身就是导航，首页不再单独放文字版分类索引。
+const coverCard = CARDS.find((card) => card.tier === 'cover')!;
+const contentCards = CARDS.filter((card) => card.tier !== 'cover' && !card.draft);
+// 轮播里的卡片：不含封面（吊牌只负责飞出去并淡出，用户反馈它在卡片队里格格不入）
+const rowCards = contentCards;
+---
+
+<Base title="Hanging Pass — demo" description="A lanyard & badge interaction demo: Verlet rope physics, a coverflow morph and a 3D twisted ribbon.">
+  <main class="home-experience" id="top">
+    <div class="morph-plane" data-morph-plane hidden aria-label="Demo badge and chapter cards"></div>
+
+    <section class="home-stage" id="screen1">
+    <header class="home-masthead">
+      <span class="home-masthead__identity">Your Name</span>
+      <nav class="social-links" aria-label="Social links">
+        {/* 换成你自己的链接 */}
+        <a href="#" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+        <a href="#" rel="noreferrer">X <span aria-hidden="true">↗</span></a>
+        <a href="#" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <p class="home-watermark" aria-hidden="true">Your Name</p>
+    <h1 class="sr-only">Hanging Pass — interaction demo</h1>
+
+    <section class="badge-scene" aria-label="Demo profile card">
+      <div class="badge-lanyard" aria-hidden="true"><span>EXAMPLE.COM</span></div>
+      <span class="badge-clip" aria-hidden="true"><i></i></span>
+      {/* 3D 扭转缎带（Three.js）：和 rig SVG 完全同坐标，只画织带+印花 */}
+      <canvas class="badge-ribbon3d" data-strap-ribbon3d aria-hidden="true"></canvas>
+      <svg class="badge-rig" data-rig-strap aria-hidden="true">
+        <defs>
+          {/* 织带斜纹：细密斜线做织物质感（跟随织带每帧重画） */}
+          <pattern id="strap-weave" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
+            <path d="M 0 0 L 0 6" stroke="#ffffff16" stroke-width="2"></path>
+            <path d="M 3 0 L 3 6" stroke="#00000014" stroke-width="2"></path>
+          </pattern>
+          {/* 五金统一用中性灰金属渐变，不引入新色相 */}
+          <linearGradient id="rig-metal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#e4e6e0"></stop>
+            <stop offset="0.42" stop-color="#b7bcb5"></stop>
+            <stop offset="0.6" stop-color="#8c948c"></stop>
+            <stop offset="1" stop-color="#c8ccc5"></stop>
+          </linearGradient>
+        </defs>
+
+        {/* 织带本体：填充缎带（宽度随扭转变化，画不出定宽描边） */}
+        <path data-strap-band d="" fill="#627564" stroke="none"></path>
+        {/* 扭转的明暗：每段一个四边形，越侧过去越暗 */}
+        <g data-strap-shade></g>
+        <path data-strap-weave d="" fill="none" stroke="url(#strap-weave)" stroke-width="34" opacity="0"></path>
+        <path data-strap-highlight d="" fill="none" stroke="#718570" stroke-width="20"></path>
+        <path data-strap-thread d="" fill="none" stroke="#ffffff25" stroke-width="2"></path>
+
+        {/* 像素体标签：一个字符一个 <g>，由 lanyard-pass 每帧沿同一条折线写 transform */}
+        <g class="badge-rig__label" data-strap-label></g>
+
+        {/* 吊扣：一体成型的扁平矩形金属夹片（银色、光滑、无铆钉/螺丝/凸起） */}
+        <g data-rig-clip>
+          <rect x="-23" y="-47" width="46" height="34" rx="2.5" fill="url(#rig-metal)"></rect>
+          {/* 夹片中间的横向长方形开槽 */}
+          <rect x="-9.5" y="-33" width="19" height="4.5" rx="1" fill="#00000038"></rect>
+          {/* 织带插入处的柔影：让织带和夹片读成一个整体（夹片口一条渐隐暗带） */}
+          <rect x="-17" y="-47" width="34" height="7" fill="#26382b2e"></rect>
+          {/* 夹片底部的小圆孔：O 型圆环从这里自由垂下 */}
+          <circle cx="0" cy="-12.5" r="2.8" fill="#46524a" opacity="0.6"></circle>
+          <path d="M -1.6 -13.6 A 2.8 2.8 0 0 1 1.6 -13.6" fill="none" stroke="#ffffff70" stroke-width="0.9"></path>
+        </g>
+      </svg>
+
+      <article class="badge-card" data-morph-card data-chapter-index="0" data-card-label={coverCard.label} aria-label={`${coverCard.label} profile card`}>
+        <div class="badge-tilt">
+          <div class="badge-flip">
+            <div class="badge-face badge-face--front" data-badge-face="front">
+              <div class="badge-face__topline"><span class="badge-face__site">example.com</span></div>
+
+              <div class="badge-portrait">
+                <span class="badge-face__monogram" aria-hidden="true">YN</span>
+              </div>
+
+              <div class="badge-face__identity">
+                <p class="badge-face__name">Your Name<span>.</span></p>
+              </div>
+
+              <p class="badge-face__desc">A short line about what you do. Replace this placeholder with your own introduction — one or two sentences reads best on the badge.</p>
+
+              <p class="badge-face__motto">Replace this line · With your own motto</p>
+            </div>
+
+            <div class="badge-face badge-face--back" data-badge-face="back" hidden>
+              <div class="badge-face__topline"><span class="badge-face__site">example.com</span></div>
+
+              <div class="badge-back__body">
+                <p class="badge-back__headline">Hanging<br />Pass.</p>
+                <ul class="badge-back__roles">
+                  <li>Design &amp; Motion</li>
+                  <li>Front-end Build</li>
+                  <li>Open Source</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <i class="badge-hole" aria-hidden="true"></i>
+      </article>
+
+      <svg class="badge-rig badge-rig--front" aria-hidden="true">
+        {/* 万向节：柱体接住抓夹，钩住下环；这一组跟卡片角度旋转（抓夹那组跟织带角度） */}
+        <g data-rig-ring>
+          {/* 卡片上的投影（让卡片看起来被钩"吊着"） */}
+          <ellipse cx="0" cy="5" rx="11" ry="7" fill="#26382b2e"></ellipse>
+          {/* 卡片上的柔影 */}
+          <ellipse cx="0" cy="2.4" rx="10" ry="6" fill="#26382b1f"></ellipse>
+
+          {/* 卡片打孔（圆）：先画孔，环再压上去 —— 这样"环穿过孔"才读得出来 */}
+          <ellipse cx="0" cy="0" rx="5.2" ry="5" fill="#4f5b52"></ellipse>
+          <ellipse cx="0" cy="-1.4" rx="5.2" ry="3.2" fill="#39443b" opacity="0.55"></ellipse>
+
+          {/* O 型圆环：完整光滑的圆（无开口、无弹簧结构），从夹片底部小孔垂下，
+              下方轻轻穿过卡片圆孔。开扣动画转的就是这一组。 */}
+          <g data-rig-hook>
+            <ellipse cx="0" cy="-3.6" rx="7.2" ry="7.2" fill="none" stroke="url(#rig-metal)" stroke-width="2.6"></ellipse>
+            {/* 干净渲染的高光/暗部 */}
+            <path d="M -5.1 -7.9 A 7.2 7.2 0 0 1 1.4 -10.7" fill="none" stroke="#ffffffd0" stroke-width="1.2" stroke-linecap="round"></path>
+            <path d="M 5.1 0.7 A 7.2 7.2 0 0 1 -1.6 3.6" fill="none" stroke="#3c463e" stroke-opacity="0.32" stroke-width="1.1" stroke-linecap="round"></path>
+          </g>
+
+          {/* 环与卡面接触处的柔影 */}
+          <ellipse cx="0.8" cy="1.8" rx="4.8" ry="2.2" fill="#26382b30"></ellipse>
+        </g>
+      </svg>
+
+    </section>
+
+    <footer class="home-footer">
+      <a class="more-about-link" href="#">About <span aria-hidden="true">→</span></a>
+      <a class="contact-link" href="#">Get in touch</a>
+    </footer>
+
+    </section>
+
+    <section class="morph-runway" id="runway" aria-hidden="true">
+      <p class="morph-interstitial">HANGING PASS.</p>
+    </section>
+
+    <section class="chapter-stage" id="screen2" aria-labelledby="chapter-heading">
+      <p class="chapter-watermark" aria-hidden="true">Make &amp; Find.</p>
+
+      <header class="chapter-stage__header">
+        <p class="kicker">A little beyond the work</p>
+        <h2 id="chapter-heading">A few things I work on.</h2>
+        <p class="chapter-stage__sub">Move across a few fields and see what takes shape.</p>
+      </header>
+
+      <div class="chapter-grid" data-chapter-grid>
+        {contentCards.map((card) => (
+          <article
+            class="chapter-card"
+            data-morph-card
+            data-chapter-index={card.index}
+            data-card-label={card.label}
+            data-card-title={card.label}
+            data-card-meta={card.tag}
+            data-card-summary={card.back.summary}
+            data-card-cta={card.back.cta}
+            data-card-href={card.href}
+            data-card-bullets={JSON.stringify(card.back.bullets)}
+            style={`--card-accent: ${card.accent}`}
+            aria-label={`${card.label} — ${card.back.summary}`}
+          >
+            <div class="chapter-card__flip">
+              {/* 正面：只有「整卡图片 + 标题」——章节小字、页脚署名、箭头都按用户要求去掉 */}
+              <a class="card-face card-face--front" href={card.href} data-card-link>
+                {card.front.image && (
+                  <>
+                    <img class="card-face__bg" src={card.front.image} alt={card.front.alt} width="1024" height="1536" loading="lazy" decoding="async" draggable="false" />
+                    <span class="card-face__scrim" aria-hidden="true"></span>
+                  </>
+                )}
+                <h3>{card.label}<span>.</span></h3>
+              </a>
+              <div class="card-face card-face--back">
+                <div class="chapter-card__top"><span>{card.kicker}</span><span>{card.tag}</span></div>
+                <h3>{card.label}<span>.</span></h3>
+                <p class="card-face__summary">{card.back.summary}</p>
+                <ul>{card.back.bullets.map((item) => <li>{item}</li>)}</ul>
+                <div class="chapter-card__foot">
+                  <span>EXAMPLE.COM</span>
+                  <a class="card-face__cta" href={card.href}>{card.back.cta} <span aria-hidden="true">→</span></a>
+                </div>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {/* 右侧信息面板：显示当前卡片的说明与跳转入口（原本藏在卡片背面）。
+          字段全部来自 src/data/cards.ts / 卡片 DOM，morph 在切换时更新。 */}
+      <aside class="chapter-panel" data-chapter-panel>
+        <div class="chapter-panel__body" data-panel-body>
+          <p class="chapter-panel__index">CARD <span data-carousel-count>01 / 06</span></p>
+          <h3 class="chapter-panel__title" data-panel-title>{contentCards[0].label}<span>.</span></h3>
+          <p class="chapter-panel__meta" data-panel-meta>{contentCards[0].tag}</p>
+          <hr class="chapter-panel__rule" />
+          <p class="chapter-panel__summary" data-panel-summary>{contentCards[0].back.summary}</p>
+          <ul class="chapter-panel__list" data-panel-list>
+            {contentCards[0].back.bullets.map((item) => <li>{item}</li>)}
+          </ul>
+          <a class="chapter-panel__cta" data-panel-cta href={contentCards[0].href}>
+            <span data-panel-cta-text>{contentCards[0].back.cta}</span>
+            <span class="chapter-panel__arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+        <nav class="chapter-controls" data-chapter-controls aria-label="Chapter carousel controls">
+          <span class="sr-only" data-carousel-label>{contentCards[0].label}</span>
+          <div class="chapter-controls__dots" data-carousel-dots aria-label="Choose a chapter">
+            {rowCards.map((card, slide) => (
+              <button type="button" data-carousel-dot={slide} aria-label={`Show ${card.label}`} aria-current={slide === 0 ? 'true' : 'false'}></button>
+            ))}
+          </div>
+          <span class="chapter-panel__hint">Drag the cards</span>
+        </nav>
+      </aside>
+      <button type="button" class="chapter-return" data-return-top>Back to badge ↑</button>
+    </section>
+
+    <div class="morph-debug" data-morph-debug hidden aria-live="off"></div>
+  </main>
+
+  <script>
+    import { initLanyardMorph } from '../scripts/lanyard-morph';
+    import { initLanyardPass } from '../scripts/lanyard-pass';
+
+    const morph = initLanyardMorph();
+    if (morph) initLanyardPass(morph);
+  </script>
+</Base>
