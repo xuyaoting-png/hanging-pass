@@ -454,9 +454,14 @@ button { font: inherit; }
 .chapter-controls__dots button[aria-current='true'] { background: var(--home-ink); }
 /* Screen 2 action bar. pointer-events is enabled only on the two ends so the
    middle of the bar never blocks dragging the cards. */
-.chapter-actions { position: fixed; z-index: 9; right: max(42px, calc((100vw - var(--max-width)) / 2)); bottom: 28px; left: max(24px, calc((100vw - var(--max-width)) / 2)); display: flex; align-items: center; justify-content: space-between; gap: 20px; opacity: var(--morph-panel); pointer-events: none; }
+/* Same geometry as screen 1's .home-footer (left/right = max(42px, …),
+   bottom = 26px, align-items: flex-end), so "Get in touch" and "More about me"
+   land in exactly the same place on both screens. */
+.chapter-actions { position: fixed; z-index: 9; right: max(42px, calc((100vw - var(--max-width)) / 2)); bottom: 26px; left: max(42px, calc((100vw - var(--max-width)) / 2)); display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; opacity: var(--morph-panel); pointer-events: none; }
 .chapter-actions a, .chapter-actions button { pointer-events: auto; }
-.chapter-actions__end { display: flex; align-items: center; gap: 14px; }
+/* column-reverse: the DOM keeps "Get in touch" first, but the round button is
+   drawn floating above it. */
+.chapter-actions__end { display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 14px; }
 .chapter-actions .contact-link { border-color: #cbd2ca; background: #ffffffcc; }
 /* Round back-to-top button: same row as "Get in touch"; the flex gap keeps them apart. */
 .to-top { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: #fff; color: var(--home-ink); box-shadow: 0 6px 18px #26312b1f; cursor: pointer; transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
@@ -514,9 +519,9 @@ button { font: inherit; }
   .chapter-controls__dots { gap: 4px; margin-inline: 0; }
   .chapter-controls__dots button { width: 6px; height: 6px; }
   .chapter-controls button { width: 28px; height: 28px; }
-  .chapter-actions { right: 20px; bottom: 20px; left: 20px; gap: 12px; }
-  .chapter-actions .more-about-link { font-size: 12px; }
-  .chapter-actions .contact-link { padding: 6px 12px; font-size: 12px; }
+  .chapter-actions { right: 24px; bottom: 22px; left: 24px; gap: 16px; }
+  .chapter-actions .more-about-link { font-size: 12px; margin-bottom: 7px; }
+  .chapter-actions .contact-link { font-size: 12px; }
   .to-top { width: 38px; height: 38px; }
 }
 @media (min-width: 761px) and (max-width: 1100px) {
