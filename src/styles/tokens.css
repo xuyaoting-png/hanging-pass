@@ -459,12 +459,12 @@ button { font: inherit; }
    land in exactly the same place on both screens. */
 .chapter-actions { position: fixed; z-index: 9; right: max(42px, calc((100vw - var(--max-width)) / 2)); bottom: 26px; left: max(42px, calc((100vw - var(--max-width)) / 2)); display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; opacity: var(--morph-panel); pointer-events: none; }
 .chapter-actions a, .chapter-actions button { pointer-events: auto; }
-/* column-reverse: the DOM keeps "Get in touch" first, but the round button is
-   drawn floating above it. */
-.chapter-actions__end { display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 14px; }
 .chapter-actions .contact-link { border-color: #cbd2ca; background: #ffffffcc; }
 /* Round back-to-top button: same row as "Get in touch"; the flex gap keeps them apart. */
-.to-top { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: #fff; color: var(--home-ink); box-shadow: 0 6px 18px #26312b1f; cursor: pointer; transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
+/* Floating back-to-top: pinned to the viewport's bottom-right corner, above the
+   action bar (bottom 96px = the 26px inset + the pill + the gap), so it clears
+   both "Get in touch" and the panel's text column. */
+.to-top { position: fixed; right: 28px; bottom: 96px; z-index: 9; display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: #fff; color: var(--home-ink); box-shadow: 0 6px 18px #26312b1f; cursor: pointer; opacity: var(--morph-panel); transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
 .to-top:hover { transform: translateY(-2px); border-color: var(--text-muted); box-shadow: 0 10px 24px #26312b2b; }
 .to-top:active { transform: translateY(0); }
 .morph-debug { position: fixed; z-index: 20; top: 12px; right: 12px; max-width: 280px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--home-paper); color: var(--home-ink); font-family: var(--font-mono); font-size: 10px; line-height: 1.5; white-space: pre; pointer-events: none; }
@@ -522,7 +522,10 @@ button { font: inherit; }
   .chapter-actions { right: 24px; bottom: 22px; left: 24px; gap: 16px; }
   .chapter-actions .more-about-link { font-size: 12px; margin-bottom: 7px; }
   .chapter-actions .contact-link { font-size: 12px; }
-  .to-top { width: 38px; height: 38px; }
+  /* On phones the gap between the summary and the action bar is a few pixels
+     tall, so a floating button would always cover text — hide it and let the
+     scroll-driven morph take you back. */
+  .to-top { display: none; }
 }
 @media (min-width: 761px) and (max-width: 1100px) {
   .chapter-grid { width: min(100%, 680px); grid-template-columns: repeat(2, minmax(0, 1fr)); }
