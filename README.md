@@ -44,6 +44,12 @@ npm run dev      # http://localhost:4321
 npm run build    # static output in dist/
 ```
 
+> **No lockfile on purpose.** `npm install` resolves platform-specific optional
+> binaries (e.g. rolldown's native bindings) for whichever OS you are on. A
+> lockfile generated on macOS makes CI (`npm ci`) fail on Linux with
+> `Cannot find module './rolldown-binding.wasi.cjs'`. If you want a lockfile,
+> generate it on the same OS your CI runs on.
+
 Requires **Node 22.12 or newer** — Astro 7 refuses to run on older Node, and CI will
 fail with a version error rather than a helpful build error. No other services,
 no build-time data.
