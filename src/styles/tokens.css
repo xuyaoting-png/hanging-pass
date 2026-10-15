@@ -106,7 +106,7 @@ button { font: inherit; }
 .social-links a:hover { color: var(--home-muted); }
 .social-links a span { display: inline-block; transition: transform 160ms ease; }
 .social-links a:hover span, .social-links a:focus-visible span { transform: translate(2px, -2px); }
-/* 头像占位：首字母圆形（模板不内置真人照片）。 */
+/* Avatar placeholder: a circular monogram (the template ships no real photo). */
 .badge-face__monogram { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: color-mix(in srgb, var(--home-ink) 9%, transparent); color: color-mix(in srgb, var(--home-ink) 70%, transparent); font-size: 30px; font-weight: 650; letter-spacing: -.03em; }
 .badge-scene { position: absolute; z-index: 1; inset: 0; }
 .badge-lanyard {
@@ -138,11 +138,11 @@ button { font: inherit; }
 .badge-clip i { position: absolute; top: 19px; left: 6px; width: 5px; height: 8px; border-radius: 3px; background: #78847a; }
 .badge-rig { display: none; position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .badge-rig--front { z-index: 3; }
-/* 像素体标签：方块字模（.badge-rig__glyph 里是一堆 1×1 rect） */
+/* Pixel label: a block glyph font (a pile of 1×1 rects inside .badge-rig__glyph) */
 .badge-rig__glyph rect { fill: #e6eae3; }
-/* 3D 缎带画布：与 rig SVG 同层同坐标 */
+/* 3D ribbon canvas: same layer, same coordinates as the rig SVG */
 .badge-ribbon3d { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-/* 卡片打孔：一条横长槽，孔内一点阴影 —— 不要金属圈（有圈就读成铆接了） */
+/* Card punch: one long horizontal slot, faint inner shadow — no metal ring (reads as a rivet) */
 .badge-hole { width: 11px; height: 10.5px; border-radius: 50%; box-shadow: inset 0 1.2px 1.6px #26382b66; }
 .badge-card {
   position: absolute;
@@ -177,7 +177,7 @@ button { font: inherit; }
 .badge-face[hidden] { display: none; }
 .badge-face__topline { min-height: 24px; }
 .badge-face__site { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; line-height: 1.3; letter-spacing: .01em; }
-/* 圆形头像：外圈壳体（padding + hairline）+ 内圆像芯，双层嵌套而不是整块矩形照片 */
+/* Round portrait: outer shell (padding + hairline) + core, nested — not a rectangular photo */
 .badge-portrait {
   position: relative;
   display: grid;
@@ -210,8 +210,8 @@ button { font: inherit; }
 .badge-face__identity { margin-top: 20px; }
 .badge-face__name { margin: 0; font-size: clamp(27px, 2.7vw, 32px); font-weight: 650; line-height: 1.05; letter-spacing: -.055em; white-space: nowrap; }
 .badge-face__desc { margin: 18px 0 0; color: color-mix(in srgb, var(--home-ink) 76%, transparent); font-size: 12.5px; font-weight: 450; line-height: 1.58; }
-/* 箴言：底部发丝线 + 等宽小字，像盖在卡片底部的印章。
-   字号跟着卡片宽度缩放（cqw），保证 39 字符的整句在 244px 窄卡上也不折行。 */
+/* Motto: a bottom hairline + small mono type, like a stamp pressed on the card foot.
+   Size tracks card width (cqw) so the whole 39-character line fits a 244px card. */
 .badge-face__motto {
   margin: auto 0 0;
   padding-top: 16px;
@@ -232,13 +232,13 @@ button { font: inherit; }
 .badge-back__roles li { font-size: 12.5px; font-weight: 450; line-height: 1.5; }
 .chapter-card__top { display: flex; justify-content: space-between; gap: 10px; font-family: var(--font-mono); font-size: 8px; letter-spacing: .12em; }
 .chapter-card h3 { margin: 16px 0 0; font-size: 30px; font-weight: 650; line-height: 1; letter-spacing: -.055em; }
-/* 卡面宽度作为容器：标题字号跟卡片宽度绑定 → 6 张卡永远同级 */
+/* Card width as the container: the title size is tied to card width → all 6 cards match */
 .chapter-card { container-type: inline-size; }
 .chapter-card h3 span { color: var(--home-ink); }
 .chapter-card ul { flex: 1; margin: 18px 0 0; padding: 0; list-style: none; }
 .chapter-card li { padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--home-ink) 15%, transparent); font-size: 12px; line-height: 1.35; }
 .chapter-card li::before { content: '— '; opacity: .4; }
-/* 分割线已去掉（用户要求）：底部署名不再有 border-top */
+/* Divider removed (at the user's request): the foot signature no longer has a border-top */
 .chapter-card__foot { display: flex; justify-content: space-between; margin-top: auto; padding-top: 12px; font-family: var(--font-mono); font-size: 8px; letter-spacing: .12em; }
 .badge-scene--interactive .badge-lanyard, .badge-scene--interactive .badge-clip { display: none; }
 .badge-scene--interactive .badge-rig { display: block; }
@@ -294,20 +294,20 @@ button { font: inherit; }
 .morph-runway { position: relative; height: 80vh; }
 .morph-interstitial { position: fixed; z-index: 1; top: 47%; left: 50%; width: max-content; margin: 0; transform: translate(-50%, -50%); opacity: var(--morph-next); color: color-mix(in srgb, var(--home-ink) 5%, transparent); font-size: clamp(110px, 19vw, 280px); font-weight: 650; line-height: .8; letter-spacing: -.075em; white-space: nowrap; pointer-events: none; }
 .chapter-stage { position: relative; display: flex; min-height: 100svh; flex-direction: column; align-items: center; justify-content: center; padding: 88px 42px 112px; background: var(--home-paper); color: var(--home-ink); }
-/* 第二屏水印：对应第一屏的 .home-watermark。
-   三段各说一件事：the name（谁）→ the slogan（过渡情绪）→ Make & Find.（这里有什么）。
-   座右铭 Go Fun The World. 只在吊牌背面（翻面才出现），避免同屏重复。
-   放左栏两行，避免被中间那排卡片切成碎片；由 --morph-panel 驱动。 */
+/* Screen 2 watermark: the counterpart of .home-watermark on screen 1.
+   Three lines, one point each: the name (who) → the slogan (mood) → Make & Find. (what's here).
+   The motto Go Fun The World. lives only on the badge back (on flip), never twice on screen.
+   Two lines in the left column, clear of the card row; driven by --morph-panel. */
 .chapter-watermark {
-  /* fixed：跟随视口（卡片在固定层里），否则会随着第二屏滚入而从卡片上扫过去 */
+  /* fixed: tracks the viewport (cards sit in a fixed layer), or sweeps across them on scroll */
   position: fixed;
   z-index: 1;
   top: 50%;
   left: max(42px, calc((100vw - var(--max-width)) / 2));
   width: max-content;
   margin: 0;
-  /* 改成"左舞台 + 右面板"之后，水印缩到舞台宽度内（约 62vw），放在卡片背后；
-     字号不再和第一屏等大（1333px 的大字放不进 911px 的舞台，会压到右侧面板）。 */
+  /* After switching to "left stage + right panel" the watermark shrank to the stage (about 62vw),
+     behind the cards; 1333px can no longer fit the 911px stage, so it would press the panel. */
   transform: translateY(-50%);
   color: #e8ebe5;
   font-size: clamp(88px, 12vw, 176px);
@@ -331,9 +331,9 @@ button { font: inherit; }
 .chapter-card ul { margin-top: 14px; }
 .chapter-card li { padding: 6px 0; font-size: 11px; }
 .chapter-card__foot { color: color-mix(in srgb, var(--home-ink) 64%, transparent); }
-/* 卡片正反两面：正面（主题图 / 占位卡面）↔ 背面（说明 + 跳转）。
-   翻面只由"居中的那张卡"触发（lanyard-morph.ts 的 flipIndex），
-   拖拽切卡时不翻面；背面 CTA 才是真正的跳转入口。 */
+/* Card front and back: front (theme image / placeholder face) ↔ back (description + link).
+   Only "the card in the centre" triggers a flip (flipIndex in lanyard-morph.ts);
+   switching cards by drag never flips; the back CTA is the real entry point. */
 .chapter-card__flip {
   position: relative;
   width: 100%;
@@ -342,8 +342,8 @@ button { font: inherit; }
   transition: transform .55s cubic-bezier(.22, .61, .36, 1);
 }
 .chapter-card.is-flipped .chapter-card__flip { transform: rotateY(180deg); }
-/* 只有"朝前的那一面"可交互：backface-visibility 只隐藏渲染，不隐藏命中的目标，
-   不这么做的话翻到背面时点击仍会打在正面的链接上，背面 CTA 永远点不到。 */
+/* Only the forward face is interactive: backface-visibility hides rendering, not hit targets;
+   without it, a click after the flip still hits the front link and the back CTA never fires. */
 .chapter-card.is-flipped .card-face--front { pointer-events: none; }
 .chapter-card:not(.is-flipped) .card-face--back { pointer-events: none; }
 .card-face {
@@ -358,26 +358,26 @@ button { font: inherit; }
 }
 .card-face--front { background: var(--badge-sage); }
 
-/* ── 拖拽时不要选中文字 / 不要拖走元素 ──────────────────────────
-   原理：在**拖拽面**上禁用选择，从根源上让"选中"无法开始（按在卡片上拖，选不中任何东西）。
-   右侧信息面板单独恢复 user-select: text —— 里面的条目还要能复制。 */
+/* ── No text selection / no element drag while dragging ─────────
+   Why: no selection on the **drag surface**, so it never starts (drag the card, select nothing).
+   The right-hand info panel restores user-select: text on its own — its entries stay copyable. */
 .badge-scene, .chapter-stage, .chapter-watermark, .chapter-card, .chapter-card a, .chapter-card img, .badge-card { user-select: none; -webkit-user-select: none; }
 .chapter-panel, .chapter-panel * { user-select: text; -webkit-user-select: text; }
-/* 阻止原生"拖链接 / 拖图片"（Chrome / Safari） */
+/* Block the native "drag a link / drag an image" behaviour (Chrome / Safari) */
 .chapter-card a, .chapter-card img, .badge-card img { -webkit-user-drag: none; }
 .card-face--back { transform: rotateY(180deg); background: color-mix(in srgb, var(--badge-sage) 84%, var(--home-ink)); }
 .card-face__summary { margin: 12px 0 0; color: color-mix(in srgb, var(--home-ink) 76%, transparent); font-size: 12px; line-height: 1.5; }
 .card-face__cta { border-bottom: 1px solid currentColor; color: var(--home-ink); text-decoration: none; }
 .card-face__cta:hover { opacity: .75; }
 
-/* 整卡铺满的封面图：铺满卡面，文字浮在上面。
-   注意：.card-face 本身已经是 position:absolute + inset:0（天然就是定位上下文），
-   不要再给 --front 写 position:relative —— 那会覆盖掉 absolute，卡面高度会塌成内容高度。 */
+/* Full-bleed cover image: it fills the card face and the text floats on top.
+   Note: .card-face is already position:absolute + inset:0, a positioning context by nature.
+   Never put position:relative on --front: it beats absolute and collapses to content height. */
 .card-face__bg { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; }
-/* 上下留一层极淡的纸色 → 顶部的章节小字与底部署名在图上仍然清楚 */
+/* A very faint paper tint top and bottom → the kicker and signature stay legible on the image */
 .card-face__scrim { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, color-mix(in srgb, #f7f9f5 78%, transparent) 0%, color-mix(in srgb, #f7f9f5 24%, transparent) 22%, transparent 42%, transparent 62%, color-mix(in srgb, #f7f9f5 72%, transparent) 100%); }
-/* 正面只剩标题：① 一行放得下（nowrap）② 字号跟卡片宽度绑定（cqw）→ 6 张卡完全一致
-   8cqw 是按最长的一条 "Engineering Plastics."（21 字符）反推的，刚好在一行内 */
+/* Front keeps only the title: one line (nowrap), size tracks card width (cqw) → 6 cards match.
+   8cqw is back-solved from the longest "Engineering Plastics." (21 characters), just one line. */
 .card-face--front > h3 {
   position: relative;
   z-index: 2;
@@ -395,12 +395,12 @@ button { font: inherit; }
 
 
 .chapter-card__tilt { display: flex; width: 100%; height: 100%; flex-direction: column; transform-origin: center; transform-style: preserve-3d; }
-/* 右侧信息面板（左舞台 + 右面板布局） */
+/* Right-hand info panel (left stage + right panel layout) */
 .chapter-panel {
   position: fixed;
   z-index: 9;
-  /* 顶部锚定：--row-center 减去面板典型高度的一半（216px），
-     这样内容长短变化时**标题的 y 恒定**，翻卡不会上下跳。 */
+  /* Anchored at the top: --row-center minus half the panel's typical height (216px),
+     so **the title's y stays constant** as content length changes and flipping never jumps. */
   top: calc(var(--row-center, 50%) - 216px);
   right: max(42px, calc((100vw - var(--max-width)) / 2));
   display: flex;
@@ -415,9 +415,9 @@ button { font: inherit; }
 .chapter-panel__title { margin: 0; color: var(--home-ink); font-size: clamp(22px, 1.9vw, 26px); font-weight: 650; line-height: 1.08; letter-spacing: -.05em; }
 .chapter-panel__meta { margin: 0; color: var(--home-muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
 .chapter-panel__rule { width: 100%; margin: 2px 0; border: 0; border-top: 1px solid color-mix(in srgb, var(--home-ink) 15%, transparent); }
-/* 固定 2 行高度：摘要 1 行的卡不会把下面整块往上拽 → 面板完全静止 */
+/* Fixed 2-line height: a 1-line summary cannot pull the block below up → the panel stays still */
 .chapter-panel__summary { min-height: 42px; margin: 0; color: color-mix(in srgb, var(--home-ink) 78%, transparent); font-size: 13px; line-height: 1.6; }
-/* 固定高度：按 5 条要点预留，条目少的卡也不会把下面的 CTA/圆点往上拽 */
+/* Fixed height: reserved for 5 bullets, so a card with fewer never pulls the CTA/dots up */
 .chapter-panel__list { display: grid; min-height: 180px; align-content: start; gap: 9px; margin: 0; padding: 0; list-style: none; }
 .chapter-panel__list li { padding-bottom: 9px; border-bottom: 1px solid color-mix(in srgb, var(--home-ink) 12%, transparent); font-size: 12.5px; }
 .chapter-panel__list li:last-child { padding-bottom: 0; border-bottom: 0; }
@@ -494,8 +494,8 @@ button { font: inherit; }
   .chapter-card__top { font-size: 7px; }
   .chapter-card h3 { font-size: clamp(20px, 6vw, 27px); }
   .chapter-card li { padding: 4px 0; font-size: 10px; }
-  /* 移动端：卡片在固定层里居中，面板改固定在下方（不参与流式布局，避免和卡片重叠）；
-     要点列表折叠，只留标题 + 摘要 + CTA，保证一屏放得下。 */
+  /* Mobile: cards are centred in the fixed layer, so the panel is fixed below instead —
+     out of flow, no card overlap; bullets collapse to title + summary + CTA so one screen fits. */
   .chapter-panel { position: fixed; top: auto; right: 24px; bottom: 26px; left: 24px; width: auto; transform: none; gap: 14px; }
   .chapter-panel__list { display: none; }
   .chapter-panel__rule { display: none; }

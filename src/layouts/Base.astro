@@ -11,8 +11,8 @@ const { title, description } = Astro.props;
 // Self-hosted Geist. Absolute paths via BASE_URL keep sub-path deploys (GitHub Pages) working;
 // injected with is:inline + set:html: Vite leaves this CSS alone, so there is no
 // "didn't resolve at build time" warning and ${...} is never parsed as CSS.
-// BASE_URL 是 '/hanging-pass'（**结尾没有斜杠**）——直接拼接会得到
-// '/hanging-passfonts/...' ✗，字体 404。这里规范化成必定以 / 结尾。
+// BASE_URL is '/hanging-pass' (**no trailing slash**) — naive concatenation gives
+// '/hanging-passfonts/...' ✗ and a 404 on the fonts. Normalised here to always end with /.
 const rawBase = import.meta.env.BASE_URL;
 const fontBase = rawBase.endsWith('/') ? rawBase : rawBase + '/';
 const urls = [
