@@ -44,7 +44,9 @@ npm run dev      # http://localhost:4321
 npm run build    # static output in dist/
 ```
 
-Requires Node 18+ (Astro 7). No other services, no build-time data.
+Requires **Node 22.12 or newer** — Astro 7 refuses to run on older Node, and CI will
+fail with a version error rather than a helpful build error. No other services,
+no build-time data.
 
 ## Make it yours
 
