@@ -67,7 +67,8 @@ export function initLanyardPass(morph: LanyardMorphController): void {
   // correct in a single step -- the rope gets stretched and the card looks "detached" from
   // the strap. So this uses a "clearly visible but not violent" magnitude:
   //   ropeStretch 0.08 ≈ 30px vertical; angle 0.025 + omega 0.1 ≈ 60–70px lateral
-  const ENTRANCE = { ropeStretch: 0.075, angle: 0.035, omega: 0.14 };  // 25% smaller overall
+  // 25% tighter than the preset described above, for a subtler entrance
+  const ENTRANCE = { ropeStretch: 0.075, angle: 0.035, omega: 0.14 };
   // Layout jitter within 1.2s of the entrance triggers measure(), which rebuilds the sim
   // and wipes the impulse -- so a rebuild inside this window re-fires it once, and never
   // replays it after that.
@@ -236,7 +237,7 @@ export function initLanyardPass(morph: LanyardMorphController): void {
     const endLength = Math.hypot(endX, endY) || 1;
     path += ` L ${(clipPoint.x - endX / endLength * STRAP_TAIL).toFixed(2)} ${(clipPoint.y - endY / endLength * STRAP_TAIL).toFixed(2)}`;
     // First parse the d we just wrote back into a polyline (ribbon, pixel label and clip
-    // rotation all read this one copy, so they stay from the same source)
+    // rotation all read this one copy, so they share a single source)
     const polyline: { x: number; y: number }[] = [];
     for (const match of path.matchAll(/([ML])\s*(-?[\d.]+)\s+(-?[\d.]+)/g)) {
       polyline.push({ x: Number(match[2]), y: Number(match[3]) });
