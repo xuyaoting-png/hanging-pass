@@ -28,11 +28,13 @@ export type LanyardMorphController = {
   getDebugState(): Readonly<Record<string, unknown>>;
 };
 
-// 卡片入场参数按实际卡片数量生成（数量 = DOM 里的静态卡 + 1 张吊牌封面）。
-// 加减卡片只改 src/data/cards.ts，这里不需要手写 7 组数字。
+// Card entrance params are generated from the real card count (count = static cards in the
+// DOM + 1 badge cover). To add or remove cards just edit src/data/cards.ts; no need to
+// hand-write 7 sets of numbers here.
 type CardParams = { enter: [number, number]; arc: number };
-// 轮播的「幻灯片」不含封面（第 0 张吊牌）：封面只负责飞出去并淡出。
-// 幻灯片 s ↔ DOM 的 data-chapter-index = s + 1
+// Carousel "slides" exclude the cover (the badge at index 0): the cover only flies out and
+// fades away.
+// slide s ↔ DOM data-chapter-index = s + 1
 let slideCount = 1;
 let cardParams: CardParams[] = [{ enter: [0.02, 0.66], arc: -52 }];
 
@@ -44,32 +46,39 @@ function buildCardParams(count: number): CardParams[] {
 }
 
 const COVER = {
-  // 左舞台 + 右面板：当前卡的横向锚点（视口宽度的比例），右侧 360px 让给信息面板
+  // Left stage + right panel: horizontal anchor for the active card (fraction of the
+  // viewport width); the right 360px is given to the info panel
   anchorRatio: 0.32,
   spacing: 238,
-  // 间距 = 卡片实际宽度 × 这个比例。本站卡片是 clamp(244px, 21vw, 292px)，
-  // 写死间距在宽屏下会小于卡片宽度（相邻卡叠在一起），换断点又不一致。
+  // Spacing = real card width × this ratio. This site's card is clamp(244px, 21vw, 292px),
+  // so a hard-coded spacing ends up narrower than the card on wide screens (neighbours
+  // overlap) and differs per breakpoint.
   spacingRatio: 1.12,
-  // 深度调小：z 越大，透视把后排卡片往灭点收得越多（170 时整排差 7px，看起来歪）
+  // Depth kept small: the larger z is, the more perspective pulls back-row cards toward the
+  // vanishing point (at 170 the whole row was 7px off and looked crooked)
   depth: 60,
-  // 不倾斜：卡片一律竖直（之前 rotate 1.6 让左右两张歪着）
+  // No tilt: cards stay vertical (rotate 1.6 used to leave the left and right ones askew)
   rotate: 0,
   scaleStep: 0.085,
-  // 只让当前卡 + 左右各 1 张清晰可见，第 2 张淡到几乎不可见（否则会伸到右侧面板底下）
+  // Only the active card + 1 on each side stay clearly visible; the 2nd fades to almost
+  // nothing (otherwise it reaches under the right panel)
   fadeStep: 0.95,
-  // 不竖向错位、也不给当前卡"抬近"（liftZ 会让它在透视下被推下去，整排差 9px）
+  // No vertical offset and no "lift" on the active card (liftZ pushes it down under
+  // perspective; the whole row was 9px off)
   yStep: 0,
   liftZ: 0,
   overshoot: 0.05,
 };
 
-// 面板文字会跟着切卡变化，漂移放慢到 7s/张（原来 2.8s 会太吵）
+// Panel text changes as the card changes, so slow the drift to 7s/card (2.8s was too noisy)
 const AUTO = { onHover: true, always: false, secondsPerCard: 7, resumePauseAfterMs: 9000 } as const;
 
-// 卡片组的自适应缩放与竖向中心：由 measureRowFit() 写入。
-// 可用高度 = 章节标题底 → 控制条顶之间的那一段；卡片高 441px 时竖向塞不下，
-// 不缩放就会同时压住标题和被控制条压住。
-// 形变范围（第二屏归位所需的滚动距离），在 measureRowFit 里量；必须声明在模块作用域
+// Adaptive scale and vertical centre for the card row: written by measureRowFit().
+// Available height = the band between the chapter header bottom → controls top; a 441px card
+// does not fit vertically, and without scaling it would both cover the header and be covered
+// by the controls.
+// Morph range (the scroll distance needed for screen two to settle), measured in
+// measureRowFit; must be declared at module scope
 let morphRange = 0;
 let rowScale = 1;
 let rowCenterY = 0;
@@ -91,7 +100,8 @@ if (easeOutBack(0) !== 0 || easeOutBack(1) !== 1) {
   throw new Error('Lanyard morph easing endpoints must be 0 and 1.');
 }
 
-// 循环轮播：索引与位姿都按"最短环绕距离"算，最后一张之后回到第一张
+// Looping carousel: indices and poses both use the "shortest wrap distance", so after the
+// last card it wraps back to the first
 function wrapIndex(value: number): number {
   const total = slideCount || 1;
   return ((value % total) + total) % total;
@@ -123,9 +133,10 @@ function morphPose(index: number, progress: number, from: Pose, carIndex: number
   const t = span(progress, card.enter);
   const eased = easeInOutSine(t);
   const to = targetPose(index, carIndex, spacing);
-  // 封面（吊牌）不再走这里 —— 它在 draw() 里单独淡出。
-  // 所以所有幻灯片都从「藏在吊牌后面」的位姿起飞：opacity 0、略偏、略微缩小。
-  // 这里用 index + 1，是为了和原来 data-chapter-index 的偏移保持一致。
+  // The cover (badge) no longer comes through here -- it fades out separately in draw().
+  // So every slide takes off from a pose "hidden behind the badge": opacity 0, slightly
+  // offset, slightly scaled down.
+  // index + 1 is used here to stay consistent with the original data-chapter-index offset.
   const start: Pose = {
     x: from.x - (index + 1) * 14,
     y: from.y + (index + 1) * 10,
@@ -184,7 +195,8 @@ export function initLanyardMorph(): LanyardMorphController | null {
       plane.appendChild(cardElement);
       cards.push({ element: cardElement, tilt, index });
 
-      // 内容卡不再翻面：说明与跳转入口已经在右侧面板里常驻显示（少一整套状态）
+      // Content cards no longer flip: the description and the jump-in link live permanently
+      // in the right panel (one whole state machine fewer)
       cardElement.addEventListener('focusin', () => {
         if (canInteract()) setTarget(index - 1);
       });
@@ -197,7 +209,8 @@ export function initLanyardMorph(): LanyardMorphController | null {
   plane.hidden = false;
   document.documentElement.classList.add('morph-ready');
 
-  // 卡片尺寸只在 measure 时量一次：draw() 每帧读 offsetWidth/offsetHeight 会白花计算
+  // Card sizes are measured once during measure: reading offsetWidth/offsetHeight every frame
+  // in draw() would waste layout work
   const cardSizes = new Map<number, { width: number; height: number }>();
   function measureCards(): void {
     for (const card of cards) {
@@ -211,20 +224,24 @@ export function initLanyardMorph(): LanyardMorphController | null {
     const controls = document.querySelector<HTMLElement>('[data-chapter-controls]');
     const cardHeight = cardSizes.get(0)?.height ?? 0;
     if (!cardHeight) return;
-    // 控件已经搬进右侧面板，基准改成"标题底 → 版心底部"（留 64px 呼吸位）
+    // The controls moved into the right panel, so the reference is now "header bottom →
+    // layout bottom" (leaving 64px of breathing room)
     const narrow = window.innerWidth <= 760;
     const top = header ? header.offsetTop + header.offsetHeight + 10 : 0;
     const bottom = chapterStage.clientHeight - 64;
     const band = Math.max(220, bottom - top);
     rowScale = clamp((band - 28) / cardHeight, 0.5, 1);
     rowCenterY = top + band / 2;
-    // 暴露给 CSS：面板据此与卡片行垂直对齐（否则一个居中在 50%、一个在 58% 看着不齐）
+    // Exposed to CSS so the panel can align vertically with the card row (otherwise one
+    // centres at 50% and the other at 58%, which reads as misaligned)
     chapterStage.style.setProperty('--row-center', `${Math.round(rowCenterY)}px`);
-    // 形变范围：第二屏顶部滚到视口顶所需的距离（用绝对位置，避免 offsetParent 差异）
+    // Morph range: distance needed to scroll screen two's top to the viewport top (absolute
+    // position, to avoid offsetParent differences)
     morphRange = Math.round(chapterStage.getBoundingClientRect().top + window.scrollY);
     if (morphRange < 200) morphRange = Math.round(window.innerHeight + runway.offsetHeight);
     if (narrow) {
-      // 窄屏：面板固定在底部，卡片整体上移并略缩，保证不和面板重叠
+      // Narrow screens: the panel is pinned to the bottom, so shift the card row up and scale
+      // it down slightly to keep them from overlapping
       rowScale = Math.min(rowScale, 0.92);
       rowCenterY = chapterStage.clientHeight * 0.36;
     }
@@ -232,7 +249,8 @@ export function initLanyardMorph(): LanyardMorphController | null {
 
   measureRowFit();
 
-  // 相邻卡片的水平间距：跟着卡片实际宽度走，任何断点下都一致
+  // Horizontal spacing between neighbouring cards: follows the real card width, so it stays
+  // consistent at every breakpoint
   function coverSpacing(): number {
     const cardWidth = cardSizes.get(0)?.width ?? COVER.spacing;
     return Math.min(cardWidth * COVER.spacingRatio, window.innerWidth * 0.72);
@@ -249,15 +267,17 @@ export function initLanyardMorph(): LanyardMorphController | null {
   let frameId = 0;
   let tween: { from: number; to: number; start: number; duration: number } | null = null;
   let badgeFaceHandler: (flipped: boolean) => void = () => {};
-  // 翻面状态：只有 carIndex 附近的那张允许翻开；离开中心即复位
+  // Flip state: only the card near carIndex may be flipped open; leaving the centre resets it
   let flipIndex: number | null = null;
   let pendingFlip: number | null = null;
   let physicsResumeHandler = () => {};
-  // 开扣：滚屏一开始，钩绕环心转出去（转场的第一拍）
+  // Unclip: as soon as scrolling starts, the hook rotates out around the O-ring centre (the
+  // first beat of the transition)
   const rigHook = scene?.querySelector<SVGGElement>('[data-rig-hook]');
   const ribbonCanvas = scene?.querySelector<HTMLCanvasElement>('[data-strap-ribbon3d]');
   let currentLabel = '';
-  // 右侧信息面板：字段从卡片 DOM 的 data-* 读（单一数据源 = src/data/cards.ts）
+  // Right info panel: fields are read from the card DOM's data-* (single source of truth =
+  // src/data/cards.ts)
   const panelBody = document.querySelector<HTMLElement>('[data-panel-body]');
   const panelTitle = document.querySelector<HTMLElement>('[data-panel-title]');
   const panelMeta = document.querySelector<HTMLElement>('[data-panel-meta]');
@@ -295,7 +315,8 @@ export function initLanyardMorph(): LanyardMorphController | null {
       if (panelCta && el.dataset.cardHref) panelCta.href = el.dataset.cardHref;
       if (panelCtaText) panelCtaText.textContent = el.dataset.cardCta ?? '';
     };
-    // 交叉淡入：先淡出再换文字（只在切换时动 DOM，不做逐帧写）
+    // Cross-fade: fade out first, then swap the text (the DOM only changes on switch, no
+    // per-frame writes)
     panelBody.classList.add('is-switching');
     window.clearTimeout(panelSwap);
     panelSwap = window.setTimeout(() => {
@@ -324,9 +345,10 @@ export function initLanyardMorph(): LanyardMorphController | null {
     velocity: number;
   } = { id: -1, x: 0, y: 0, moved: 0, axis: null, index: 0, startIndex: 0, lastX: 0, velocity: 0 };
 
-  // 形变范围 = 第二屏刚好滚到视口顶部所需的滚动距离。
-  // 之前用 runway 高度（80vh），于是卡片在 590px 处就落位，而第二屏要 1328px 才归位 ——
-  // 中间 738px 里标题会从固定层的卡片上扫过去（刷新停在那儿就是"图片和标题重合"）。
+  // Morph range = the scroll distance that puts screen two exactly at the top of the viewport.
+  // It used to be runway height (80vh), so cards settled at 590px while screen two only
+  // settled at 1328px -- across those 738px the header swept over the fixed-layer cards
+  // (a refresh parked there looked like "image and header overlapping").
   function morphLength(): number {
     return morphRange || Math.max(runway.offsetHeight, window.innerHeight * 0.8);
   }
@@ -344,31 +366,39 @@ export function initLanyardMorph(): LanyardMorphController | null {
     const previousProgress = progress;
     const length = morphLength();
     progress = clamp(window.scrollY / length, 0, 1);
-    // 淡入窗口按剩余可滚距离收窄，并在触底时直接给到 1 ——
-    // 否则面板/水印会停在 0.988 这种"差一点"的值上。
+    // The fade-in window narrows with the remaining scrollable distance and snaps to 1 at the
+    // bottom -- otherwise the panel/watermark stops on "almost there" values like 0.988.
     const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    // 面板淡入收在最后一段（卡片基本落位之后），避免和飞行中的卡片交叉
+    // The panel fades in over the last stretch (after the cards have mostly settled), to
+    // avoid crossing paths with cards still in flight
     const panelWindow = clamp(length * 0.16, 140, 260);
-    // 淡入窗口要提前一个 panelWindow 开始，否则会到最后一帧才跳出来
+    // The fade-in window must start one panelWindow earlier, otherwise everything pops in on
+    // the very last frame
     panelProgress = window.scrollY >= maxScroll - 2 ? 1 : clamp((window.scrollY - (length - panelWindow)) / panelWindow, 0, 1);
     const panelOpacity = easeInOutCubic(panelProgress);
     const root = document.documentElement;
     root.style.setProperty('--morph-chrome', String(1 - easeInOutCubic(span(progress, [0, 0.3]))));
     root.style.setProperty('--morph-panel', panelOpacity.toFixed(3));
     root.style.setProperty('--morph-next', (easeInOutCubic(span(progress, [0.1, 0.5])) * (1 - panelOpacity)).toFixed(3));
-    // 身份内容先淡出、章节内容后淡入，两段不重叠 —— 否则中途会同时看到
-    // 半透明的人脸/名字和章节列表叠在一张卡上（"重影"）。
-    // 第 0 张现在是 About Me 封面（正面身份始终可见），不再需要"身份 → 章节"交叉淡入
+    // Identity content fades out first and chapter content fades in after, with no overlap --
+    // otherwise you would briefly see a translucent face/name and the chapter list stacked on
+    // one card ("ghosting").
+    // Card 0 is now the About Me cover (the front identity is always visible), so the
+    // "identity → chapter" cross-fade is no longer needed
     plane.classList.toggle('morph-plane--carousel', panelProgress > 0.85);
     scene.classList.toggle('is-morph-locked', progress > 0.04);
     if (previousProgress > 0.04 && progress <= 0.04) physicsResumeHandler();
-    // 一开滚就把吊牌翻回正面：否则它会在过渡段带着背面（座右铭）飞，和 HELLO. 同屏重复。
-    // 用"0 → >0"的跨越判断，直接跳到底部（一帧跨完）也能复位。
+    // Flip the badge back to its front as soon as scrolling starts: otherwise it flies
+    // through the transition showing its back (the motto), duplicating HELLO. on the same
+    // screen.
+    // The "0 → >0" crossing test also resets it when you jump straight to the bottom
+    // (crossing in a single frame).
     if (previousProgress <= 0.001 && progress > 0.001 && flipIndex === 0) setFlip(null);
   }
 
-  // 卡片会在指针下面滑走，用 pointerover/pointerout 判断悬停会误判成"离开"，
-  // 于是漂移走一张就停。这里改成按几何区域判断：指针是否落在卡片行的范围内。
+  // Cards slide out from under the pointer, so pointerover/pointerout misreads hover as
+  // "left" and the drift stops after one card. Instead test geometry: is the pointer inside
+  // the card row's bounds?
   let pointerX = -1;
   let pointerY = -1;
   document.addEventListener('pointermove', (event) => {
@@ -389,13 +419,14 @@ export function initLanyardMorph(): LanyardMorphController | null {
     return Math.abs(index - carIndex) < 0.55;
   }
 
-  // 轮播要等面板起来才可交互（和现有的拖拽门槛一致）
+  // The carousel only becomes interactive once the panel is up (same threshold as dragging)
   function canInteract(): boolean {
     return panelProgress >= 0.85;
   }
 
   function setFlip(next: number | null): void {
-    // 内容卡传的是 data-chapter-index（≥1），幻灯片 = index - 1；封面只在第一屏有效
+    // Content cards pass data-chapter-index (≥1), slide = index - 1; the cover is only valid
+    // on the first screen
     const value = next === null ? null : next === 0 ? (progress <= 0.5 ? 0 : null) : (isCentered(next - 1) ? next : null);
     if (value === flipIndex) return;
     const previous = flipIndex;
@@ -409,22 +440,25 @@ export function initLanyardMorph(): LanyardMorphController | null {
   }
 
   function toggleFlip(index: number): void {
-    // 吊牌（第 0 张）第一屏、第二屏都能翻：第一屏看座右铭，第二屏看封面背面 + More about me
+    // The badge (index 0) can flip on both screens: the motto on screen one, the cover back +
+    // "More about me" on screen two
     if (index === 0) {
-      // 封面（吊牌）只在第一屏可翻；第二屏它已经淡出
+      // The cover (badge) is only flippable on the first screen; it has faded out on screen two
       if (progress > 0.5) return;
       setFlip(flipIndex === 0 ? null : 0);
       return;
     }
     if (!canInteract()) return;
-    // 内容卡：点击 = 吸附到中间（不再翻面，说明与链接在右侧面板）
+    // Content card: click = snap to centre (no more flipping; description and link live in
+    // the right panel)
     setTarget(index - 1);
   }
 
   function draw(): void {
     if (!snapshot) return;
     updateProgress();
-    // 离开中心就复位，避免"翻着的卡在队伍里游荡"（封面只在第一屏有效）
+    // Reset once off centre, so a flipped card does not "wander through the queue" (the cover
+    // is only valid on the first screen)
     const flipValid = flipIndex === null || (flipIndex === 0 ? progress <= 0.5 : isCentered(flipIndex - 1));
     if (flipIndex !== null && !flipValid) setFlip(null);
     if (pendingFlip !== null && Math.round(carIndex) === pendingFlip) {
@@ -433,7 +467,8 @@ export function initLanyardMorph(): LanyardMorphController | null {
       setFlip(index);
     }
     const { width, height } = snapshot;
-    // 舞台锚点：当前卡的横向基准（原来是视口中心，现在左移给右侧面板让位）
+    // Stage anchor: horizontal reference for the active card (it used to be the viewport
+    // centre; now shifted left to make room for the right panel)
     const centerX = width * COVER.anchorRatio;
     const centerY = rowCenterY || height / 2;
     const spacing = coverSpacing();
@@ -445,7 +480,8 @@ export function initLanyardMorph(): LanyardMorphController | null {
       scale: 1,
       opacity: 1,
     };
-    // 开扣：0.008 → 0.10 之间把钩转出 42° 并上抬 7px（滚一点点就完成，读起来是"我先解开"）
+    // Unclip: between 0.008 → 0.10 rotate the hook out 42° and lift it 7px (done after a tiny
+    // bit of scrolling, so it reads as "I undo it first")
     if (rigHook) {
       const release = easeInOutCubic(span(progress, [0.008, 0.1]));
       rigHook.setAttribute('transform', `rotate(${(release * 42).toFixed(2)}) translate(0 ${(-release * 7).toFixed(2)})`);
@@ -457,7 +493,8 @@ export function initLanyardMorph(): LanyardMorphController | null {
       element.style.visibility = strapVisible ? 'visible' : 'hidden';
       if (strapVisible) {
         element.style.opacity = String((element === rigFrontLayer ? 1 - span(progress, [0, 0.14]) : 1) * (1 - strapProgress));
-        // 结尾带上 --strap-twist：翻面时吊绳跟着翻转的那点扭转（由 lanyard-pass 算）
+        // Append --strap-twist here: the slight twist of the lanyard during a flip (computed by
+        // lanyard-pass)
         element.style.transform = `translateY(${-strapProgress * height * 0.62}px) rotate(var(--strap-twist, 0deg))`;
       }
     }
@@ -467,7 +504,8 @@ export function initLanyardMorph(): LanyardMorphController | null {
       const cardWidth = size ? size.width : card.element.offsetWidth;
       const cardHeight = size ? size.height : card.element.offsetHeight;
 
-      // 封面（第 0 张吊牌）：不参与轮播，飞出去的同时淡出
+      // Cover (the badge at index 0): not part of the carousel; flies out and fades at the same
+      // time
       if (card.index === 0) {
         const exit = easeInOutCubic(span(progress, [0.3, 0.7]));
         if (progress > 0.001) {
@@ -491,7 +529,7 @@ export function initLanyardMorph(): LanyardMorphController | null {
     }
     if (label && count) {
       const activeSlide = wrapIndex(Math.round(carIndex));
-      // 幻灯片 s ↔ data-chapter-index = s + 1（封面不在轮播里）
+      // slide s ↔ data-chapter-index = s + 1 (the cover is not in the carousel)
       const activeLabel = cards.find((card) => card.index === activeSlide + 1)?.element.dataset.cardLabel ?? '';
       if (currentLabel !== activeLabel) {
         currentLabel = activeLabel;
@@ -527,15 +565,15 @@ export function initLanyardMorph(): LanyardMorphController | null {
     const overRow = pointerOverRow();
     if (overRow !== drift.hover) {
       drift.hover = overRow;
-      // 离开卡片行：解除"点击后暂停"，并吸附到最近一张
+      // Leaving the card row: clear the "paused after click" state and snap to the nearest card
       if (!overRow) {
         drift.pause = false;
         carTarget = wrapIndex(Math.round(carIndex));
       }
     }
-    // 暂停不能"粘住"：点过卡片/圆点后，只要鼠标还留在卡片行里，
-    // 原来的逻辑就永远不会解除暂停 ✗ → 表现为"不能循环播放"。
-    // 这里让它 9 秒后自动恢复（用户停止交互就继续轮播）。
+    // Pause must not stick: after clicking a card/dot, as long as the pointer stayed inside the
+    // row the old logic never cleared the pause ✗ → it looked like "looping is broken".
+    // Here it auto-resumes after 9s (the carousel continues once the user stops interacting).
     if (drift.pause && !drift.wasPaused) drift.pausedAt = time;
     drift.wasPaused = drift.pause;
     if (drift.pause && time - drift.pausedAt > AUTO.resumePauseAfterMs) {
@@ -545,7 +583,7 @@ export function initLanyardMorph(): LanyardMorphController | null {
     const canDrift = panelProgress > 0.85 && !reducedMotion.matches && !drift.pause &&
       (AUTO.always || (AUTO.onHover && drift.hover));
     if (canDrift) {
-      // 循环：一直向前，最后一张之后接第一张
+      // Loop: always forward, wrapping from the last card to the first
       drift.direction = 1;
       carIndex = wrapIndex(carIndex + dt / AUTO.secondsPerCard);
       carTarget = carIndex;
@@ -568,8 +606,9 @@ export function initLanyardMorph(): LanyardMorphController | null {
     }
 
     const settling = Math.abs(loopOffset(carTarget, carIndex)) > 0.0005;
-    // 形变区间内必须每帧都跑。靠 scroll 事件唤醒的话，事件被合并/延迟时卡片就会落后
-    // 原生滚动好几帧（实测最多 6 帧不动再跳），这是"不丝滑"的主因。
+    // Must run every frame inside the morph range. If it were woken by scroll events only, a
+    // coalesced/delayed event would leave the cards several frames behind native scroll
+    // (measured up to 6 frames frozen then a jump) -- the main reason it "did not feel smooth".
     const inMorphRange = progress > 0 && progress < 1;
     if (tween || canDrift || settling || showDebug || inMorphRange) requestFrame();
     else lastFrameTime = 0;
@@ -598,11 +637,13 @@ export function initLanyardMorph(): LanyardMorphController | null {
   dots.forEach((dot) => dot.addEventListener('click', () => setTarget(Number(dot.dataset.carouselDot))));
   document.querySelector<HTMLButtonElement>('[data-return-top]')?.addEventListener('click', () => scrollToY(0));
 
-  // 吊牌正面的点击 = 翻面（第一屏看座右铭 / 第二屏看封面背面）。
-  // 不能只靠 plane 的 pointerup：轮播的指针门槛在第一屏不成立，会被提前 return 掉。
+  // A click on the badge front = flip (motto on screen one / cover back on screen two).
+  // Cannot rely on plane's pointerup alone: the carousel's pointer threshold does not hold on
+  // the first screen, so it would return early.
   badge.addEventListener('click', (event) => {
-    if ((event.target as HTMLElement | null)?.closest('a')) return; // 背面 CTA 是链接，不拦
-    // 长按 / 拖拽之后浏览器仍会派发 click —— 这种不翻面（短按才翻）
+    if ((event.target as HTMLElement | null)?.closest('a')) return; // back CTA is a link, skip
+    // After a long press / drag the browser still fires click -- that must not flip (only a
+    // short press flips)
     if (badge.dataset.wasDrag === '1') return;
     event.preventDefault();
     toggleFlip(0);
@@ -621,7 +662,8 @@ export function initLanyardMorph(): LanyardMorphController | null {
     if (panelProgress < 0.85 || event.button !== 0) return;
     const target = (event.target as HTMLElement).closest<HTMLElement>('[data-morph-card]');
     if (!target) return;
-    // 背面 CTA：不要 setPointerCapture，否则 click 会被捕获到卡片上，链接永远不触发
+    // Back CTA: do not setPointerCapture, otherwise the click is captured by the card and the
+    // link never fires
     if ((event.target as HTMLElement).closest('.card-face--back a[href]')) return;
     pointer.id = event.pointerId;
     pointer.x = event.clientX;
@@ -660,7 +702,8 @@ export function initLanyardMorph(): LanyardMorphController | null {
       drift.pause = true;
     } else if (wasClick) {
       const onLink = Boolean((event.target as HTMLElement | null)?.closest('a'));
-      // 落在链接上的点击交给下面的 click 处理器（正面翻面/吸附，背面 CTA 直接跳转）
+      // A click landing on a link is left to the click handler below (front flips/snaps, back
+      // CTA navigates)
       if (!onLink) toggleFlip(activeIndex);
     }
     pointer.id = -1;
@@ -671,8 +714,9 @@ export function initLanyardMorph(): LanyardMorphController | null {
   plane.addEventListener('pointerup', finishPointer);
   plane.addEventListener('pointercancel', finishPointer);
 
-  // 正面链接：拦下来翻面（居中的卡）或吸附到中间（侧卡）——
-  // 避免"只想看一眼介绍就被带走"；背面 CTA 不拦截，正常跳转。
+  // Front links: intercept to flip (centred card) or snap to centre (side card) --
+  // so "just wanting a quick look at the description" does not carry you away; the back CTA
+  // is not intercepted and navigates normally.
   plane.addEventListener('click', (event) => {
     const link = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[data-card-link]');
     if (!link || !canInteract()) return;

@@ -5,8 +5,12 @@ Verlet rope physics · a scroll-driven coverflow morph · a real 3D twisted ribb
 
 <p align="center"><code>Astro</code> · <code>TypeScript</code> · <code>Three.js</code> · zero UI framework</p>
 
-<!-- TODO 发布前：录一段 10 秒动图放这里（README 的门面）：
-     ![demo](docs/demo.gif)  -->
+> **Demo media:** no screenshot is bundled on purpose. Screen 1's badge is
+> positioned by JavaScript on the first frame, and the motion only reads as motion —
+> so a still frame of it is misleading, and a trustworthy capture needs a real
+> compositor. Record one yourself in ~30 seconds: open the demo, reload, and
+> capture the first 8 seconds (badge entrance → swing), then scroll to screen 2.
+> Drop the file in `docs/` and reference it here.
 
 ## What it is
 
@@ -64,6 +68,17 @@ no build-time data.
 | Card covers | put images in `public/img/` and set `front.image` per card; they render full-bleed with the title on top |
 | Colours, type, spacing | `src/styles/tokens.css` |
 | Font | Geist is self-hosted in `public/fonts/` — see [`public/fonts/README.md`](public/fonts/README.md), or swap it for a system stack |
+
+## Project structure
+
+```
+src/scripts/      the three systems + the 3D ribbon and its bitmap glyphs
+src/data/         demo card content (this is the file you edit first)
+src/pages/        one page: screen 1 + screen 2
+src/styles/       tokens.css (design tokens and all component styles)
+docs/             how-it-works.md — read this before changing the physics
+.github/workflows/deploy.yml   GitHub Pages deployment
+```
 
 ## Notes on behaviour (by design)
 

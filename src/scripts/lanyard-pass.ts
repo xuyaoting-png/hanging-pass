@@ -10,7 +10,8 @@ type Point2D = { x: number; y: number };
 
 const TARGET_PERIOD = 1.86;
 const BASE_ROPE_RATIO = 0.62;
-// 织带末端要伸进抓夹内部（原来是停在绳扣前 42px，切口露在抓夹外面，看着像没连上）
+// The strap tail must reach inside the clip plate (it used to stop 42px short of the clip,
+// leaving the cut end outside it, which read as "not attached")
 const STRAP_TAIL = 22;
 const MAX_SWING = 88 * Math.PI / 180;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
@@ -45,24 +46,31 @@ export function initLanyardPass(morph: LanyardMorphController): void {
   let sceneRect = scene.getBoundingClientRect();
   let pin: Point2D = { x: 0, y: 0 };
   let baseRopeLength = 0;
-  // 弹性挂绳：拖拽时可以把挂绳拉长（上限 CORD_STRETCH），松手后由欠阻尼弹簧拉回静止长度，
-  // 于是出现「往下拉 → 弹起来」的回弹（ζ≈0.35，会来回几下再停）。
+  // Elastic cord: dragging can stretch the rope (up to CORD_STRETCH), and on release an
+  // underdamped spring pulls it back to rest length, giving the "pull down -> springs back
+  // up" bounce (ζ≈0.35, so it oscillates a few times before settling).
   const CORD_STRETCH = 0.28;
   const ROPE_SPRING = 150;
-  const ROPE_DAMPING = 12;    // 8.5 → 12：落下弹回更快收住
+  const ROPE_DAMPING = 12;    // 8.5 → 12: settles the drop-and-bounce faster
   let ropeLength = 0;
   let ropeVelocity = 0;
-  // 入场（保守档）：挂绳预拉伸一点让它自己落下弹回，再给一个横向冲量左右晃，
-  // 约 4s 衰减到静止。数值可以直接调这三个。
-  // dx/dy = 推开的距离（会自然晃回来）；ropeStretch = 挂绳预拉伸（落下弹回）
-  // angle = 起摆角度(rad)，约 0.03 rad ≈ 20px（总摆长 665px）；ropeStretch = 挂绳预拉伸
-  // 模拟"人上手抓一下再松手"：先被拽下去（挂绳拉长）→ 弹回 → 甩一下左右摆几回。
-  // 注意（踩过的坑）：冲量给太猛会超出 PBD 求解器的单步修正能力 —— 绳长被拉长，
-  // 卡片会看着和带子"脱开"。所以这里取"肉眼明显但不暴力"的量级：
-  //   ropeStretch 0.08 ≈ 纵向 30px；angle 0.025 + omega 0.1 ≈ 横向 60–70px
-  const ENTRANCE = { ropeStretch: 0.075, angle: 0.035, omega: 0.14 };  // 整体收 25%：入场更含蓄
-  // 入场后 1.2s 内的 layout 抖动会触发 measure() 重建 sim，重建会把冲量冲掉 ——
-  // 所以在这个窗口内的重建要补发一次，之后不再重播。
+  // Entrance (conservative preset): pre-stretch the cord a little so it drops and bounces
+  // back on its own, then add a lateral impulse to sway left and right, decaying to rest in
+  // about 4s. These three numbers are meant to be tweaked directly.
+  // dx/dy = push distance (it sways back naturally); ropeStretch = cord pre-stretch
+  // (drop and bounce)
+  // angle = start swing angle (rad), ~0.03 rad ≈ 20px (total pendulum length 665px);
+  // ropeStretch = cord pre-stretch
+  // Mimics "a person grabs it once and lets go": pulled down (cord stretches) → bounces
+  // back → one flick, then a few left-right swings.
+  // Gotcha (learned the hard way): too strong an impulse exceeds what the PBD solver can
+  // correct in a single step -- the rope gets stretched and the card looks "detached" from
+  // the strap. So this uses a "clearly visible but not violent" magnitude:
+  //   ropeStretch 0.08 ≈ 30px vertical; angle 0.025 + omega 0.1 ≈ 60–70px lateral
+  const ENTRANCE = { ropeStretch: 0.075, angle: 0.035, omega: 0.14 };  // 25% smaller overall
+  // Layout jitter within 1.2s of the entrance triggers measure(), which rebuilds the sim
+  // and wipes the impulse -- so a rebuild inside this window re-fires it once, and never
+  // replays it after that.
   let entranceScale = 0;
   let entranceRetryUntil = 0;
   let cordLength = 0;
@@ -85,8 +93,9 @@ export function initLanyardPass(morph: LanyardMorphController): void {
   const pointer = { id: -1, x: 0, y: 0, started: 0, moved: 0, lastMove: 0, grabX: 0, grabY: 0 };
 
   // Keep the original markup visible until all geometry and the first SVG frame are ready.
-  // 像素体标签：按字模生成每字一个 <g>（只建一次），每帧只写 transform
-  // 扭转缎带的暗部：24 段四边形（只建一次，每帧只改 d 与透明度）
+  // Pixel label: one <g> per glyph built from the font bitmap (built once), each frame
+  // only writes transform
+  // Twisted ribbon shading: 24 quads (built once, each frame only rewrites d and opacity)
   const RIBBON_STEPS = 24;
   const shadeQuads: SVGPathElement[] = [];
   for (let i = 0; i < RIBBON_STEPS; i++) {
@@ -97,7 +106,8 @@ export function initLanyardPass(morph: LanyardMorphController): void {
     shadeQuads.push(quad);
   }
 
-  // 3D 缎带（Three.js）接管织带与印花；SVG 那套带子/高光/缝线/像素字隐藏
+  // The 3D ribbon (Three.js) takes over the strap and the print; the SVG band/highlight/
+  // thread/pixel-label set is hidden
   let ribbon3d: Ribbon3D | null = null;
   if (ribbonCanvas) {
     ribbon3d = createRibbon3D(ribbonCanvas, { width: 34 });
@@ -165,24 +175,26 @@ export function initLanyardPass(morph: LanyardMorphController): void {
       pinX: pin.x,
       pinY: pin.y,
       gravity: 4 * Math.PI * Math.PI * effectivePendulumLength / (TARGET_PERIOD * TARGET_PERIOD),
-      // 子步翻倍：长链需要更多子步，否则大冲量下约束修不过来（绳长被拉长/卡片甩出）
+      // Double the substeps: a long chain needs more of them, otherwise big impulses
+      // outrun what the constraints can fix (rope stretches / card flung out)
       fixedDt: 1 / 120,
-      frictionPerFrame: 0.9915,   // 0.99 → 0.988：甩动衰减更快、收得住
+      frictionPerFrame: 0.9915,   // 0.99 → 0.988: sway decays faster and settles
       chainInvMass: 0.06,
-      bendStiffness: 0.45,        // 0.3 → 0.45：织带更挺，拖动时不糊成一团
+      bendStiffness: 0.45,        // 0.3 → 0.45: stiffer strap, no mush while dragging
       maxAngle: maxVisibleAngle,
       returnStrength: 12,
     });
     lastAngle = 0;
     dragTarget = null;
-    // 可见绳长：折线里 y ≥ 0 的那一段（挂点那截在屏幕外）
+    // Visible rope length: the y ≥ 0 part of the polyline (the pin end is off-screen)
     let visibleRope = 0;
     const pts = sim.state().points;
     for (let i = 1; i < pts.length; i++) {
       if (pts[i].y < 0 || pts[i - 1].y < 0) continue;
       visibleRope += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
     }
-    // 贴图长度必须用**折线真实弧长**（UV 覆盖的就是它），不能用 baseRopeLength + cordLength
+    // The texture length must use the **polyline's true arc length** (that is exactly what
+    // the UVs cover), not baseRopeLength + cordLength
     let ropeArc = 0;
     for (let i = 1; i < pts.length; i++) ropeArc += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
     ribbon3d?.setViewport(sceneRect.width, sceneRect.height, Math.max(120, ropeArc), { front: 'HELLO', back: '2025' }, Math.max(60, visibleRope));
@@ -199,7 +211,8 @@ export function initLanyardPass(morph: LanyardMorphController): void {
   function clampToReach(point: Point2D): Point2D {
     const dx = point.x - pin.x;
     const dy = point.y - pin.y;
-    // 上限要包含挂绳的拉伸量，否则指针够不到往下拉的那一段
+    // The cap must include the cord's stretch, or the pointer cannot reach the pulled-down
+    // part
     const length = baseRopeLength * (1 + CORD_STRETCH) + cordLength;
     const radius = clamp(Math.hypot(dx, dy), Math.max(length * 0.6, minVisibleY - pin.y), length);
     const angle = clamp(Math.atan2(dx, dy), -maxVisibleAngle, maxVisibleAngle);
@@ -222,19 +235,23 @@ export function initLanyardPass(morph: LanyardMorphController): void {
     const endY = clipPoint.y - lastDrawn.y;
     const endLength = Math.hypot(endX, endY) || 1;
     path += ` L ${(clipPoint.x - endX / endLength * STRAP_TAIL).toFixed(2)} ${(clipPoint.y - endY / endLength * STRAP_TAIL).toFixed(2)}`;
-    // 先把刚写下的同一条 d 解析成折线（缎带、像素字、夹片旋转都读这一份，保证同源）
+    // First parse the d we just wrote back into a polyline (ribbon, pixel label and clip
+    // rotation all read this one copy, so they stay from the same source)
     const polyline: { x: number; y: number }[] = [];
     for (const match of path.matchAll(/([ML])\s*(-?[\d.]+)\s+(-?[\d.]+)/g)) {
       polyline.push({ x: Number(match[2]), y: Number(match[3]) });
     }
 
-    // 扭转缎带：Φ = sin(翻面角) × 90° —— 翻面中途扭到最大、两面归零
-    // （用户要的就是"点一下翻到背面 + 整条挂绳扭一下，再点还原"）
-    // 半圈（150°）= 参考图那种"上宽 → 中间细 → 下宽"的麻花。
-    // 扭转按屏幕 y 分布：可见段顶部 0° → 底部 150°（中途经过 75° 时最细）
+    // Twisted ribbon: Φ = sin(flip angle) × 90° -- max twist mid-flip, zero on both faces
+    // (what the user asked for: "tap to flip to the back + the whole lanyard twists once,
+    // tap again to undo")
+    // Half a turn (150°) = the reference image's "wide top → thin middle → wide bottom" twist.
+    // Twist follows screen y: 0° at the top of the visible span → 150° at the bottom
+    // (thinnest as it passes 75°)
     const twist = twistEnvelope(flipAngle, 150);
     const clipY = polyline.length ? polyline[polyline.length - 1].y : 0;
-    // 3D 缎带：真半圈（结以下整段翻到背面，自遮挡由 z 深度产生）
+    // 3D ribbon: a true half turn (everything below the knot turns to the back; self-
+    // occlusion comes from z depth)
     ribbon3d?.update(polyline, twistEnvelope(flipAngle, 180));
     const ribbon = sampleRibbon(polyline, twist, RIBBON_STEPS, 6, clipY);
     const halfWidth = 17;
@@ -243,13 +260,15 @@ export function initLanyardPass(morph: LanyardMorphController): void {
     const avgFacing = ribbon.reduce((sum, r) => sum + r.facing, 0) / Math.max(1, ribbon.length);
     for (let i = 0; i < shadeQuads.length; i++) {
       const quad = quads[i];
-      // 直接用不透明插值色铺满整条缎带：不再叠半透明层，所以不会多出"结处的阴影"
+      // Paint the whole ribbon with the opaque interpolated colour: no translucent layers
+      // on top any more, so no phantom "shadow at the knot"
       shadeQuads[i].setAttribute('d', quad ? quad.d : '');
       shadeQuads[i].setAttribute('fill', quad ? quad.fill : 'none');
       shadeQuads[i].setAttribute('opacity', quad ? '1' : '0');
     }
     const line = centerlinePath(ribbon);
-    // 高光也必须是"随扭转变窄的缎带"：定宽描边在侧过去时会变成一条浮着的独立条
+    // The highlight must also be a "ribbon that narrows with the twist": a fixed-width
+    // stroke turns into a floating separate bar once it edges past the view
     strapHighlight.setAttribute('d', ribbonBandPath(ribbon, halfWidth * 0.58));
     strapHighlight.setAttribute('fill', '#718570');
     strapHighlight.setAttribute('stroke', 'none');
@@ -258,16 +277,20 @@ export function initLanyardPass(morph: LanyardMorphController): void {
     strapThread.setAttribute('opacity', ((1 - avgFacing) * 0.85).toFixed(3));
     strapWeave?.setAttribute('d', path);
     strapWeave?.setAttribute('opacity', '0');
-    // 标签：解析刚写下的同一条 d（保证和织带完全同源、同一帧），逐字按弧长摆位
+    // Label: parse the same d just written (so it shares the strap's exact source and
+    // frame), then place each glyph along the arc length
     const poses = layoutLabel(polyline, LABEL_TEXT, { pixel: LABEL_PIXEL, visibleTop: 6, bottomReserve: 34 });
     for (let i = 0; i < labelGlyphs.length && i < poses.length; i++) {
       const pose = poses[i];
-      // 侧过去时把字压窄 —— 必须和缎带用同一个基准（屏幕 y），否则字和带子各扭各的
+      // Squeeze the glyphs as the strap turns edge-on -- must use the same reference as the
+      // ribbon (screen y), otherwise glyphs and strap twist out of step
       const glyphK = Math.max(0, Math.min(1, (pose.y - 6) / Math.max(1, clipY - 6)));
-      // 织带侧过去时压的是「带宽度方向」= 字的 y 轴（不是字的 x 轴）
+      // When the strap turns edge-on, what squashes is the "strap width direction" = the
+      // glyph's y axis (not its x axis)
       const knot = Math.exp(-Math.pow((glyphK - 0.42) / 0.17, 2));
       const facing = 1 - Math.max(0, Math.min(1, Math.abs(twist) / Math.PI)) * knot;
-      // 结以下看到的是印花的「背面」→ 沿织带宽度方向镜像（这就是"翻到背面"的读法）
+      // Below the knot you see the "back" of the print → mirror along the strap width
+      // (that is what "flipped to the back" reads as)
       const mirrored = glyphK > 0.42 && Math.abs(twist) > 0.25;
       labelGlyphs[i].setAttribute(
         'transform',
@@ -277,9 +300,11 @@ export function initLanyardPass(morph: LanyardMorphController): void {
 
     // CSS/SVG rotate() must receive the negative of the physical angle.
     const rotation = -state.angleDeg;
-    // 夹片是刚体、织带是曲线：用"末端切线"会让夹片和织带口的方向差几度，
-    // 37px 的杠杆下就能把 34px 宽的织带从 46px 宽的夹片侧面顶出来。
-    // 所以取「夹片口高度处」的织带方向（沿折线往回退 PLATE_HEIGHT 的距离）。
+    // The clip plate is rigid, the strap is a curve: using the "tail tangent" leaves the
+    // plate a few degrees off the strap mouth, and on a 37px lever that pushes the 34px-wide
+    // strap out through the side of the 46px-wide plate.
+    // So take the strap direction at the "plate mouth height" (walk back PLATE_HEIGHT along
+    // the polyline).
     const PLATE_HEIGHT = 34;
     let mouthPoint = lastDrawn;
     let walked = 0;
@@ -296,22 +321,27 @@ export function initLanyardPass(morph: LanyardMorphController): void {
       mouthPoint = b;
     }
     const tailAngle = Math.atan2(clipPoint.y - mouthPoint.y, clipPoint.x - mouthPoint.x) * 180 / Math.PI;
-    // 翻面时吊绳"跟着翻转"：以绳扣为轴，整条织带扭一下，翻转中途最大、两面归零。
-    // 用 sin 包络（0°→0、90°→峰值、180°→0），所以不会在两面留下歪掉的织带。
-    // 上面 twist 是"真·缎带扭转"（弧度）。这里再给整条 rig 一点点倾角（五金跟着歪一点），
-    // 幅度取扭转的 1/4 —— 主要效果由缎带承担，rig 只做辅助。
-    // 绳子必须保持在垂直线上"原地扭"：整条 rig 不做刚体旋转（那会变成横向甩动）
+    // On a flip the lanyard "flips along": twist the whole strap about the clip point,
+    // peaking mid-flip and returning to zero on both faces.
+    // Uses a sin envelope (0°→0, 90°→peak, 180°→0), so no skewed strap is left on either face.
+    // The twist above is the "real ribbon twist" (radians). Here we also give the whole rig a
+    // slight tilt (the hardware leans with it), at 1/4 of the twist amplitude -- the ribbon
+    // carries the effect and the rig only assists.
+    // The cord must stay on the vertical and "twist in place": no rigid rotation of the whole
+    // rig (that would turn into a sideways swing)
     const rigTwist = 0;
     if (strapRig) {
       strapRig.style.transformOrigin = `${clipPoint.x.toFixed(2)}px ${clipPoint.y.toFixed(2)}px`;
       strapRig.style.setProperty('--strap-twist', `${rigTwist.toFixed(3)}deg`);
     }
-    // 金属件跟着卡片翻：用水平压扁模拟 rotateY（绕绳扣为原点，所以从本地原点缩放）
+    // Hardware flips with the card: fake rotateY by squashing horizontally (the origin is
+    // the clip point, so scale from the local origin)
     const flipScale = Math.max(0.12, Math.abs(Math.cos((flipAngle * Math.PI) / 180)));
     clip.setAttribute('transform', `translate(${clipPoint.x.toFixed(3)} ${clipPoint.y.toFixed(3)}) rotate(${(tailAngle - 90 + rigTwist).toFixed(4)}) scale(${flipScale.toFixed(3)} 1)`);
     ring.setAttribute('transform', `translate(${clipPoint.x.toFixed(3)} ${clipPoint.y.toFixed(3)}) rotate(${(rotation + rigTwist * 0.6).toFixed(4)}) scale(${flipScale.toFixed(3)} 1)`);
-    // 卡片位姿：形变期间统一由 lanyard-morph 写（两个循环同时写会互相覆盖），
-    // progress≈0 时仍由物理写，保证静止/拖拽由物理驱动。
+    // Card pose: written only by lanyard-morph during the morph (two loops writing at once
+    // would overwrite each other); at progress≈0 physics still writes it, so rest and drag
+    // stay physics-driven.
     if (morph.getProgress() <= 0.001) {
       badge.style.transform = `translate3d(${(state.com.x - cardW / 2).toFixed(4)}px, ${(state.com.y - cardH / 2).toFixed(4)}px, 0) rotate(${rotation.toFixed(4)}deg)`;
       tilt.style.transform = `rotateX(${tiltX.toFixed(3)}deg) rotateY(${tiltY.toFixed(3)}deg)`;
@@ -350,7 +380,8 @@ export function initLanyardPass(morph: LanyardMorphController): void {
         ropeLength = clamp(reach - cordLength, baseRopeLength * 0.35, baseRopeLength * (1 + CORD_STRETCH));
         ropeVelocity = 0;
       } else {
-        // 松手后：阻尼弹簧把挂绳拉回静止长度 —— 这一步产生「弹起来」的回弹
+        // After release: the damped spring pulls the cord back to rest length -- this step
+        // is what produces the "springs back up" bounce
         const acc = (baseRopeLength - ropeLength) * ROPE_SPRING - ropeVelocity * ROPE_DAMPING;
         ropeVelocity += acc * dt;
         ropeLength += ropeVelocity * dt;
@@ -358,8 +389,9 @@ export function initLanyardPass(morph: LanyardMorphController): void {
       sim.setRopeLength(ropeLength);
       if (morph.getProgress() <= 0.04) sim.step(dt);
       const state = sim.state();
-      // 三维倾斜上限压小：原来 ±30°/±42° 时，大幅摆动会让卡片像"甩飞/脱开"，
-      // 现在 ±9°/±12° —— 仍然是"卡片在晃"，但不会看着断开。
+      // Shrink the 3D tilt caps: at the old ±30°/±42° a big swing made the card look
+      // "flung off/detached"; now ±9°/±12° -- still "the card is swaying", but never
+      // visually severed.
       const targetX = clamp(state.velocity.y * 0.008, -9, 9);
       const targetY = clamp(-state.velocity.x * 0.012, -12, 12);
       const factor = 1 - Math.exp(-dt * 7);
@@ -409,20 +441,23 @@ export function initLanyardPass(morph: LanyardMorphController): void {
   }
 
   /**
-   * 入场冲量。scale 用来给"回到吊牌"一个更小的版本。
-   * 只在第一屏、非减少动态效果、且用户没在拖拽时生效。
+   * Entrance impulse. scale gives the "back to badge" case a smaller version.
+   * Only fires on the first screen, without reduced motion, and while the user is not dragging.
    */
   function fireEntrance(scale: number): void {
     const narrow = window.innerWidth <= 760;
-    // 织带长度 = 0.62 × 视口高：738 高时 457px，1490 高时 882px。
-    // 链子段数不变、每段翻倍 → 长链等效更软，同样的冲量会把绳拉长、卡片甩出。
-    // 所以冲量按绳长反比缩放，保证不同窗口下视觉幅度一致、且不出求解器稳定区。
+    // Strap length = 0.62 × viewport height: 457px at 738 high, 882px at 1490 high.
+    // Same segment count with each segment twice as long → the long chain acts softer, so
+    // the same impulse stretches the rope and flings the card out.
+    // So scale the impulse inversely with rope length: the visual amplitude stays consistent
+    // across window sizes and stays inside the solver's stable range.
     const ropeScale = Math.min(1, Math.max(0.62, 457 / Math.max(1, baseRopeLength)));
     const k = scale * (narrow ? 0.7 : 1) * ropeScale;
     ropeLength = baseRopeLength * (1 + ENTRANCE.ropeStretch * k);
     ropeVelocity = 0;
     sim.setRopeLength(ropeLength);
-    // 从静止放开到一侧：重力力矩驱动摆动，阻尼约 4s 停
+    // Released from rest to one side: gravity torque drives the swing, damping stops it in
+    // about 4s
     sim.swing(ENTRANCE.angle * k, ENTRANCE.omega);
     wake();
   }
@@ -447,18 +482,21 @@ export function initLanyardPass(morph: LanyardMorphController): void {
       render();
     }
     if (!reduced) {
-      // 不再瞬间把挂绳设回静止长度：交给阻尼弹簧回弹（这就是「拉下去弹起来」）
+      // No longer snapping the cord back to rest length instantly: let the damped spring
+      // bounce it (that is the "pull it down and it springs up" feel)
       sim.release();
     }
     badge.classList.remove('is-dragging');
     if (badge.hasPointerCapture(event.pointerId)) badge.releasePointerCapture(event.pointerId);
     const click = !canceled && pointer.moved < 6 && performance.now() - pointer.started < 400;
-    // 浏览器在拖拽后照样会派发 click —— 这里打个标记，交给 morph 决定"不翻面"。
-    // 短按（<6px 且 <400ms）= 翻面；长按/拖拽后松手 = 不翻面。
+    // Browsers still dispatch click after a drag -- so flag it here and let morph decide
+    // "no flip". Short press (<6px and <400ms) = flip; long press / release after a drag =
+    // no flip.
     if (!click) badge.dataset.wasDrag = '1';
     pointer.id = -1;
     dragTarget = null;
-    // 翻面统一由 lanyard-morph 的 flipIndex 决定（这里再翻一次会互相抵消）
+    // Flipping is decided solely by lanyard-morph's flipIndex (flipping again here would
+    // cancel it out)
     if (!click && !reduced) wake();
   }
 
@@ -559,9 +597,10 @@ export function initLanyardPass(morph: LanyardMorphController): void {
       lastTime = 0;
       return;
     }
-    // 回到前台：只有视口尺寸真的变了才重新测量。
-    // 无条件 measure() 会重建 sim 并清空 dragTarget —— 切个标签页回来就会把
-    // 正在进行的拖拽打断（自动化环境里这个事件会频繁触发，表现为"拖不动"）。
+    // Back to foreground: only re-measure when the viewport size really changed.
+    // An unconditional measure() rebuilds the sim and clears dragTarget -- switching tabs
+    // and back would interrupt an in-progress drag (automation environments fire this event
+    // constantly, which shows up as "cannot drag").
     if (window.innerWidth !== measuredViewport.w || window.innerHeight !== measuredViewport.h) {
       measure();
     } else {
@@ -570,10 +609,12 @@ export function initLanyardPass(morph: LanyardMorphController): void {
     }
   });
 
-  // 只在从顶部打开时播；刷新停在第二屏、带锚点、减少动态效果都不播
+  // Only plays when opened from the top; a refresh parked on screen two, a hash anchor, or
+  // reduced motion all skip it
   if (!reduced && window.scrollY < 8 && !window.location.hash) playEntrance(1);
 
-  // 点「Back to badge ↑」回到吊牌时，轻轻回应一下（比入场小）
+  // Clicking "Back to badge ↑" to return to the badge answers softly (smaller than the
+  // entrance)
   document.querySelector<HTMLElement>('[data-return-top]')?.addEventListener('click', () => {
     window.setTimeout(() => {
       if (!reduced && window.scrollY < 8) playEntrance(0.6);

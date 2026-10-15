@@ -1,18 +1,17 @@
 # Fonts
 
-`geist-latin.woff2` and `geist-latin-ext.woff2` are **Geist**, the open-source
-typeface by Vercel.
+`geist-latin.woff2` and `geist-latin-ext.woff2` are **Geist**,
+Copyright (c) 2023 Vercel, in collaboration with basement.studio.
 
-- Project: https://github.com/vercel/geist-font
-- Google Fonts specimen / license page: https://fonts.google.com/specimen/Geist/license
+Licensed under the **SIL Open Font License, Version 1.1** — the full license
+text is bundled as [`LICENSE-Geist.txt`](LICENSE-Geist.txt), together with the
+upstream authors list.
 
-⚠️ **Before you publish this repository, confirm the license text from the
-upstream repository and ship it here.** Geist is distributed as an open font
-(Google Fonts only hosts openly licensed families), which normally permits
-redistribution — but open font licenses require the copyright and license notice
-to travel with the files. This folder deliberately does **not** invent a license
-file; copy the upstream `LICENSE` here as `LICENSE-Geist.txt` once verified.
+- Upstream project: https://github.com/vercel/geist-font
+- Google Fonts specimen: https://fonts.google.com/specimen/Geist
 
-If you don't want to deal with that, delete this folder and change
-`src/styles/fonts.css` to a system font stack — the layout does not depend on
+Because the OFL requires the copyright and license notice to travel with the
+font files, keep `LICENSE-Geist.txt` in place if you redistribute this template.
+If you'd rather not deal with that, delete this folder and point
+`src/styles/fonts.css` at a system font stack — nothing in the layout depends on
 Geist specifically.

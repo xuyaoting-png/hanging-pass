@@ -2,11 +2,11 @@
 import Base from '../layouts/Base.astro';
 import { DEMO_CARDS as CARDS } from '../data/cards.demo';
 
-// 卡片目录：改 src/data/cards.demo.ts 换成你自己的内容即可。
-// 第二屏的卡片本身就是导航，首页不再单独放文字版分类索引。
+// Card catalog: edit src/data/cards.demo.ts to swap in your own content.
+// The screen-2 cards are the navigation, so the home page needs no text index.
 const coverCard = CARDS.find((card) => card.tier === 'cover')!;
 const contentCards = CARDS.filter((card) => card.tier !== 'cover' && !card.draft);
-// 轮播里的卡片：不含封面（吊牌只负责飞出去并淡出，用户反馈它在卡片队里格格不入）
+// Carousel cards, cover excluded: the badge only flies out and fades, an odd fit among them.
 const rowCards = contentCards;
 ---
 
@@ -18,7 +18,7 @@ const rowCards = contentCards;
     <header class="home-masthead">
       <span class="home-masthead__identity">Your Name</span>
       <nav class="social-links" aria-label="Social links">
-        {/* 换成你自己的链接 */}
+        {/* Swap in your own links */}
         <a href="#" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
         <a href="#" rel="noreferrer">X <span aria-hidden="true">↗</span></a>
         <a href="#" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>
@@ -31,16 +31,16 @@ const rowCards = contentCards;
     <section class="badge-scene" aria-label="Demo profile card">
       <div class="badge-lanyard" aria-hidden="true"><span>EXAMPLE.COM</span></div>
       <span class="badge-clip" aria-hidden="true"><i></i></span>
-      {/* 3D 扭转缎带（Three.js）：和 rig SVG 完全同坐标，只画织带+印花 */}
+      {/* 3D twisted ribbon (Three.js): same coords as the rig SVG; draws strap + print only */}
       <canvas class="badge-ribbon3d" data-strap-ribbon3d aria-hidden="true"></canvas>
       <svg class="badge-rig" data-rig-strap aria-hidden="true">
         <defs>
-          {/* 织带斜纹：细密斜线做织物质感（跟随织带每帧重画） */}
+          {/* Strap twill: fine diagonal lines for fabric feel (redrawn per frame on the strap) */}
           <pattern id="strap-weave" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
             <path d="M 0 0 L 0 6" stroke="#ffffff16" stroke-width="2"></path>
             <path d="M 3 0 L 3 6" stroke="#00000014" stroke-width="2"></path>
           </pattern>
-          {/* 五金统一用中性灰金属渐变，不引入新色相 */}
+          {/* All hardware uses one neutral-grey metal gradient; no new hues introduced */}
           <linearGradient id="rig-metal" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#e4e6e0"></stop>
             <stop offset="0.42" stop-color="#b7bcb5"></stop>
@@ -49,25 +49,25 @@ const rowCards = contentCards;
           </linearGradient>
         </defs>
 
-        {/* 织带本体：填充缎带（宽度随扭转变化，画不出定宽描边） */}
+        {/* Strap body: a filled ribbon (width varies with twist, no constant-width stroke) */}
         <path data-strap-band d="" fill="#627564" stroke="none"></path>
-        {/* 扭转的明暗：每段一个四边形，越侧过去越暗 */}
+        {/* Twist shading: one quad per segment, the more it turns away the darker */}
         <g data-strap-shade></g>
         <path data-strap-weave d="" fill="none" stroke="url(#strap-weave)" stroke-width="34" opacity="0"></path>
         <path data-strap-highlight d="" fill="none" stroke="#718570" stroke-width="20"></path>
         <path data-strap-thread d="" fill="none" stroke="#ffffff25" stroke-width="2"></path>
 
-        {/* 像素体标签：一个字符一个 <g>，由 lanyard-pass 每帧沿同一条折线写 transform */}
+        {/* Pixel label: one <g> per glyph; lanyard-pass writes transform on the polyline */}
         <g class="badge-rig__label" data-strap-label></g>
 
-        {/* 吊扣：一体成型的扁平矩形金属夹片（银色、光滑、无铆钉/螺丝/凸起） */}
+        {/* Clip: one-piece flat metal clip plate (silver, smooth, no rivets/screws or bumps) */}
         <g data-rig-clip>
           <rect x="-23" y="-47" width="46" height="34" rx="2.5" fill="url(#rig-metal)"></rect>
-          {/* 夹片中间的横向长方形开槽 */}
+          {/* Horizontal rectangular slot through the middle of the clip plate */}
           <rect x="-9.5" y="-33" width="19" height="4.5" rx="1" fill="#00000038"></rect>
-          {/* 织带插入处的柔影：让织带和夹片读成一个整体（夹片口一条渐隐暗带） */}
+          {/* Soft shadow where the strap enters: strap + clip read as one (fading dark band) */}
           <rect x="-17" y="-47" width="34" height="7" fill="#26382b2e"></rect>
-          {/* 夹片底部的小圆孔：O 型圆环从这里自由垂下 */}
+          {/* Small round hole at the clip plate bottom: the O-ring hangs freely here */}
           <circle cx="0" cy="-12.5" r="2.8" fill="#46524a" opacity="0.6"></circle>
           <path d="M -1.6 -13.6 A 2.8 2.8 0 0 1 1.6 -13.6" fill="none" stroke="#ffffff70" stroke-width="0.9"></path>
         </g>
@@ -110,27 +110,27 @@ const rowCards = contentCards;
       </article>
 
       <svg class="badge-rig badge-rig--front" aria-hidden="true">
-        {/* 万向节：柱体接住抓夹，钩住下环；这一组跟卡片角度旋转（抓夹那组跟织带角度） */}
+        {/* Gimbal: post takes grab clip, hooks lower ring; card angle (grab: strap angle) */}
         <g data-rig-ring>
-          {/* 卡片上的投影（让卡片看起来被钩"吊着"） */}
+          {/* Drop shadow on the card (makes it read as hanging from the hook) */}
           <ellipse cx="0" cy="5" rx="11" ry="7" fill="#26382b2e"></ellipse>
-          {/* 卡片上的柔影 */}
+          {/* Soft shadow on the card */}
           <ellipse cx="0" cy="2.4" rx="10" ry="6" fill="#26382b1f"></ellipse>
 
-          {/* 卡片打孔（圆）：先画孔，环再压上去 —— 这样"环穿过孔"才读得出来 */}
+          {/* Punch hole (round): hole first, ring on top — sells "ring through hole" */}
           <ellipse cx="0" cy="0" rx="5.2" ry="5" fill="#4f5b52"></ellipse>
           <ellipse cx="0" cy="-1.4" rx="5.2" ry="3.2" fill="#39443b" opacity="0.55"></ellipse>
 
-          {/* O 型圆环：完整光滑的圆（无开口、无弹簧结构），从夹片底部小孔垂下，
-              下方轻轻穿过卡片圆孔。开扣动画转的就是这一组。 */}
+          {/* O-ring: smooth unbroken circle (no gap, no spring), hangs from the clip plate
+              hole and gently through the card punch hole. The unclip turn spins this group. */}
           <g data-rig-hook>
             <ellipse cx="0" cy="-3.6" rx="7.2" ry="7.2" fill="none" stroke="url(#rig-metal)" stroke-width="2.6"></ellipse>
-            {/* 干净渲染的高光/暗部 */}
+            {/* Cleanly rendered highlight / shade */}
             <path d="M -5.1 -7.9 A 7.2 7.2 0 0 1 1.4 -10.7" fill="none" stroke="#ffffffd0" stroke-width="1.2" stroke-linecap="round"></path>
             <path d="M 5.1 0.7 A 7.2 7.2 0 0 1 -1.6 3.6" fill="none" stroke="#3c463e" stroke-opacity="0.32" stroke-width="1.1" stroke-linecap="round"></path>
           </g>
 
-          {/* 环与卡面接触处的柔影 */}
+          {/* Soft shadow where the ring meets the card face */}
           <ellipse cx="0.8" cy="1.8" rx="4.8" ry="2.2" fill="#26382b30"></ellipse>
         </g>
       </svg>
@@ -174,7 +174,7 @@ const rowCards = contentCards;
             aria-label={`${card.label} — ${card.back.summary}`}
           >
             <div class="chapter-card__flip">
-              {/* 正面：只有「整卡图片 + 标题」——章节小字、页脚署名、箭头都按用户要求去掉 */}
+              {/* Front: full-card image + title only — kicker, credit, arrow removed on request */}
               <a class="card-face card-face--front" href={card.href} data-card-link>
                 {card.front.image && (
                   <>
@@ -199,8 +199,8 @@ const rowCards = contentCards;
         ))}
       </div>
 
-      {/* 右侧信息面板：显示当前卡片的说明与跳转入口（原本藏在卡片背面）。
-          字段全部来自 src/data/cards.ts / 卡片 DOM，morph 在切换时更新。 */}
+      {/* Right info panel: shows the active card's summary and link out (was on the card back).
+          All fields come from src/data/cards.ts / card DOM; morph updates them on switch. */}
       <aside class="chapter-panel" data-chapter-panel>
         <div class="chapter-panel__body" data-panel-body>
           <p class="chapter-panel__index">CARD <span data-carousel-count>01 / 06</span></p>

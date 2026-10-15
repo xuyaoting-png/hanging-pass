@@ -1,14 +1,14 @@
 /**
- * 吊绳上的「像素体」标签：5×7 位图字模 + 沿折线按弧长摆放。
+ * "Pixel" labels on the cord: 5×7 bitmap glyphs + placement along the polyline by arc length.
  *
- * 为什么不用 <textPath>：浏览器每更新一次路径就要重排一次文本（这才是原实现做节流的原因），
- * 于是文字的路径被量化到 2px / 0.8° 才写，摆动时永远落后织带 → 看起来"分层、轨迹不一致"。
- * 改成逐字写 transform：同一份折线、同一帧更新，而且只写 transform、不触发文本重排 —— 更快也更准。
+ * Why not <textPath>: every path update re-lays-out the text (hence the old code's throttling),
+ * so the path was quantized to 2px / 0.8° and always lagged the strap → "layered, off-track".
+ * Per-glyph transforms: same polyline, same frame, transform-only, no re-layout — faster, exact.
  */
 
 export type Pt = { x: number; y: number };
 
-/** 5×7 位图字模，'#' = 一个实心方块 */
+/** 5×7 bitmap glyphs, '#' = one filled square */
 const GLYPHS: Record<string, string[]> = {
   X: ['#...#', '#...#', '.#.#.', '..#..', '.#.#.', '#...#', '#...#'],
   U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
@@ -47,7 +47,7 @@ const GLYPHS: Record<string, string[]> = {
 export const GLYPH_W = 5;
 export const GLYPH_H = 7;
 
-/** 取某个字符的 7 行位图；没有字模就返回空白（不会崩） */
+/** 7 bitmap rows for one character; unknown chars return blanks (never throws) */
 export function glyphRows(char: string): string[] {
   return GLYPHS[char.toUpperCase()] ?? GLYPHS[' '];
 }
@@ -55,33 +55,33 @@ export function glyphRows(char: string): string[] {
 export type GlyphPose = { x: number; y: number; angle: number; arc: number; totalArc: number };
 
 type LayoutOptions = {
-  /** 基础像素边长（一个"像素方块"的边长，px） */
+  /** Base pixel edge length (the side of one "pixel square", px) */
   pixel: number;
-  /** 字距（以像素格为单位） */
+  /** Letter spacing (in pixel cells) */
   gapCells?: number;
-  /** 只在这个屏幕 y 以下才排字（避免文字跑到视口上方看不见） */
+  /** Only lay out text below this screen y (so it never runs off the top of the viewport) */
   visibleTop?: number;
-  /** 折线末端要给抓夹留出的弧长（px）—— 文字不许顶到抓夹切口上 */
+  /** Arc length (px) reserved at the polyline end for the clip — text must not reach the notch */
   bottomReserve?: number;
 };
 
 /**
- * 把文字沿折线摆放，返回每个字符的中心点与切线角度。
- * 文字在「可见段」内居中；可见段不够长时自动缩小像素边长，保证始终完整落在织带上。
+ * Lay text along the polyline; returns each glyph's center point and tangent angle.
+ * Text centers in the "visible span"; if it is short, pixel size shrinks so text always fits.
  */
 export function layoutLabel(polyline: Pt[], text: string, options: LayoutOptions): GlyphPose[] {
   if (polyline.length < 2 || !text) return [];
   const { visibleTop = 6 } = options;
   const gapCells = options.gapCells ?? 1;
 
-  // 累积弧长
+  // Cumulative arc length
   const arc: number[] = [0];
   for (let i = 1; i < polyline.length; i++) {
     arc.push(arc[i - 1] + Math.hypot(polyline[i].x - polyline[i - 1].x, polyline[i].y - polyline[i - 1].y));
   }
   const totalArc = arc[arc.length - 1] || 1;
 
-  // 可见段：从第一个 y >= visibleTop 的点开始，到折线末端（扣的位置）
+  // Visible span: from the first point with y >= visibleTop to the polyline end (the loop)
   let visibleStart = 0;
   for (let i = 0; i < polyline.length; i++) {
     if (polyline[i].y >= visibleTop) { visibleStart = arc[i]; break; }
@@ -89,7 +89,7 @@ export function layoutLabel(polyline: Pt[], text: string, options: LayoutOptions
   const reserve = options.bottomReserve ?? 0;
   const visibleLength = Math.max(0, totalArc - visibleStart - reserve);
 
-  // 自适应：可见段太短就缩小像素，保证文字完整
+  // Adaptive: shrink pixels when the visible span is too short so the text stays complete
   const cellsPerChar = GLYPH_W + gapCells;
   const wanted = text.length * cellsPerChar;
   const pixel = visibleLength > 0 ? Math.min(options.pixel, (visibleLength - 6) / wanted) : options.pixel;

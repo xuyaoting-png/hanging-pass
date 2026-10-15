@@ -13,4 +13,7 @@ export default defineConfig({
   base: pages ? '/hanging-pass' : undefined,
   // 样式全部内联：这样字体用相对路径 url('fonts/…') 也能在任意 base 下解析对
   build: { inlineStylesheets: 'always' },
+  // Three.js 是唯一的重依赖（minify 后 ~500KB / gzip ~138KB），
+  // Vite 默认 500KB 的 chunk 警告会把构建日志刷脏 —— 这里显式放宽并说明原因。
+  vite: { build: { chunkSizeWarningLimit: 900 } },
 });

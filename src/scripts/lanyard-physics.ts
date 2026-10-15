@@ -97,8 +97,9 @@ export function createSim(options: Partial<SimOptions>) {
       if (!drag.active) point.x += (cfg.pinX - point.x) * cfg.returnStrength * dt * dt;
     }
     if (drag.active) {
-      // 拖拽目标必须落在「绳扣 → 卡片」这段绳长之内：直接瞬移到指针会让
-      // |卡 − 扣| 远超 cordLength，求解器一边往回拉、渲染一边跟 → 看着绳卡分离。
+      // The drag target must stay inside the clip -> card cord span: snapping it onto the
+      // pointer makes |card - clip| far exceed cordLength, so the solver pulls back while
+      // the renderer follows along -> the rope looks detached from the card.
       const clip = pts[cfg.segments - 1];
       const pointerDX = drag.x - clip.x;
       const pointerDY = drag.y - clip.y;
@@ -199,9 +200,11 @@ export function createSim(options: Partial<SimOptions>) {
   }
 
   /**
-   * 起摆：绕挂点旋转 theta，并给出匹配的切向速度（omega 为角速度，0 = 从静止放开）。
-   * 注意：整体平移整条链不会产生摆动 —— 平移后链条几何不变，重力没有力矩；
-   * 必须改变"链子相对挂点的角度"才会摆。
+   * Kick off a swing: rotate by theta about the pin and give the matching tangential
+   * velocity (omega is the angular velocity, 0 = released from rest).
+   * Note: translating the whole chain produces no swing -- the geometry is unchanged,
+   * so gravity has no torque; only changing "the chain's angle relative to the pin"
+   * makes it swing.
    */
   function swing(theta: number, omega: number): void {
     const cos = Math.cos(theta);

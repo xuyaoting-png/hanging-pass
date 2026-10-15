@@ -1,31 +1,31 @@
 /**
- * 演示数据 —— 换成你自己的内容即可。
+ * Demo data — swap in your own content.
  *
- * 结构说明：
- *   · index 0 + tier 'cover' 是吊牌（第一屏那张卡），它的内容在 index.astro 里直接写；
- *     这里的封面条目主要提供 index/标签等字段。
- *   · 其余条目是第二屏轮播里的卡片。
- *   · front.image 留空 → 卡面只有标题（干净、无图也能跑）；填上图片路径就会整卡铺满。
- *   · href 指向你的详情页；演示里统一用 '#'，避免出现 404。
+ * Structure:
+ *   · index 0 + tier 'cover' is the badge (the screen-1 card); its content is written
+ *     straight in index.astro; the cover entry here only supplies index/label fields.
+ *   · The remaining entries are the cards in the screen-2 carousel.
+ *   · front.image empty → title-only face (clean, works with no image); add a path to
+ *     fill the card. href points at your detail page; the demo uses '#' to avoid 404s.
  */
 
 export type SiteCard = {
-  /** 与 DOM 的 data-chapter-index 一致；0 = 封面（吊牌） */
+  /** Matches data-chapter-index in the DOM; 0 = cover (the badge) */
   index: number;
   id: string;
   label: string;
-  /** 正面上方左侧的小标签 */
+  /** Small label at the top left of the front face */
   kicker: string;
-  /** 正面上方右侧的短标签 */
+  /** Short tag at the top right of the front face */
   tag: string;
   href: string;
-  /** 主题色（小面积点睛用） */
+  /** Accent colour (for small highlight touches) */
   accent: string;
   tier: 'cover' | 'business' | 'personal';
-  /** 内容未就绪的卡先不渲染 */
+  /** Cards whose content is not ready yet are not rendered */
   draft?: boolean;
   front: {
-    /** 正面大图；留空则只有标题 */
+    /** Front hero image; empty means title only */
     image?: string;
     alt: string;
   };
